@@ -27,7 +27,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -37,12 +37,7 @@ func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, LoggingClient)
 	services, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrLimitExceeded:
-			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		httperror.HandleGetAllError(w, LoggingClient, err)
 		return
 	}
 	pkg.Encode(services, w, LoggingClient)
@@ -73,13 +68,7 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		addressable, err = dbClient.GetAddressableById(ds.Addressable.Id)
 	}
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Addressable not found by ID or Name", http.StatusNotFound)
-			LoggingClient.Error("Addressable not found by ID or Name: " + err.Error())
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-		}
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 	ds.Addressable = addressable
@@ -214,13 +203,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 
@@ -235,17 +218,11 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -265,7 +242,7 @@ func restGetServiceWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -281,13 +258,7 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 
@@ -302,12 +273,7 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists and get it
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -316,7 +282,7 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.Write([]byte("true"))
 }
 
@@ -332,12 +298,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -347,7 +308,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -403,12 +364,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -416,7 +372,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -440,12 +396,7 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -454,7 +405,7 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -478,13 +429,7 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadById(did, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 
@@ -508,13 +453,7 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -543,13 +482,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -573,13 +506,7 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -608,13 +535,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		handleDeviceServiceError(w, err)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -636,12 +557,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	// Check if the devicde service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -649,7 +565,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -673,12 +589,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device service not found", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -686,7 +597,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -727,7 +638,7 @@ func callback(service models.DeviceService, id string, action string, actionType
 		if err != nil {
 			return err
 		}
-		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 
 		go makeRequest(client, req)
 	} else {
@@ -751,4 +662,15 @@ func makeRequest(client *http.Client, req *http.Request) {
 // Turn the ID and ActionType into the JSON body that will be passed
 func getBody(id string, actionType models.ActionType) ([]byte, error) {
 	return json.Marshal(models.CallbackAlert{ActionType: actionType, Id: id})
+}
+
+// Maps Device Service error to an HTTP Response
+func handleDeviceServiceError(w http.ResponseWriter, err error) {
+	LoggingClient.Error(err.Error())
+	switch err.(type) {
+	case types.ErrItemNotFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

@@ -20,6 +20,8 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -40,7 +42,7 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&res)
 }
 
@@ -58,12 +60,7 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, "Device referenced by Device Report doesn't exist", http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -105,12 +102,7 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 		// Try by name
 		to, err = dbClient.GetDeviceReportByName(from.Name)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			LoggingClient.Error(err.Error())
+			httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 			return
 		}
 	}
@@ -179,16 +171,11 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	var did string = vars[ID]
 	res, err := dbClient.GetDeviceReportById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -203,16 +190,11 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -242,7 +224,7 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(valueDescriptors)
 }
 func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -261,7 +243,7 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -272,12 +254,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportById(id)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -285,7 +262,7 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -302,12 +279,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -315,7 +287,7 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }

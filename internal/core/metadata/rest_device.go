@@ -24,9 +24,11 @@ import (
 	"strconv"
 	"strings"
 
-	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/admin"
@@ -38,15 +40,10 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, LoggingClient)
 	devices, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrLimitExceeded:
-			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		httperror.HandleGetAllError(w, LoggingClient, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&devices)
 }
 
@@ -88,15 +85,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	op := device.NewAddDevice(ch, dbClient, d)
 	newId, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case types.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		handleDeviceError(w, err)
 		return
 	}
 
@@ -135,15 +124,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 	err = op.Execute()
 
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case types.ErrDuplicateName:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		handleDeviceError(w, err)
 		return
 	}
 
@@ -167,7 +148,7 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -178,12 +159,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	_, err := dbClient.GetDeviceProfileById(pid)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -194,7 +170,7 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -205,12 +181,7 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	_, err := dbClient.GetDeviceServiceById(sid)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -221,7 +192,7 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -238,12 +209,7 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -255,7 +221,7 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -271,12 +237,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithBadRequestFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -288,7 +249,7 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -298,15 +259,10 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
+		httperror.HandleDbErrorWithBadRequestFallback(w, LoggingClient, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -330,19 +286,12 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 	//If lookup by name failed, see if we were passed the ID
 	if len(dev.Name) == 0 {
 		if dev, err = dbClient.GetDeviceById(token); err != nil {
-			LoggingClient.Error(err.Error())
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else if err == db.ErrInvalidObjectId {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 			return
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(dev)
 }
 
@@ -400,12 +349,7 @@ func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -423,10 +367,8 @@ func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
 
 func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	n, err := queryUnescape(w, vars[NAME], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -440,12 +382,7 @@ func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -479,12 +416,7 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithBadRequestFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -499,10 +431,8 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 
 func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	n, err := queryUnescape(w, vars[NAME], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -519,7 +449,7 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error(err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -571,22 +501,15 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlc string = vars[LASTCONNECTED]
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lc, err := parseQueryParam(w, vlc, http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -611,22 +534,15 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lc, err := parseQueryParam(w, vlc, http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -642,29 +558,20 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 
 func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	n, err := queryUnescape(w, vars[NAME], http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lc, err := parseQueryParam(w, vlc, http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -687,28 +594,19 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lc, err := parseQueryParam(w, vlc, http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	notify, err := strconv.ParseBool(vars[LASTCONNECTEDNOTIFY])
+	notify, err := parseQueryBool(w, vars[LASTCONNECTEDNOTIFY], http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -742,22 +640,15 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
-	lr, err := strconv.ParseInt(vlr, 10, 64)
+	lr, err := parseQueryParam(w, vlr, http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -775,28 +666,19 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	var did string = vars[ID]
 	var vlr string = vars[LASTREPORTED]
-	lr, err := strconv.ParseInt(vlr, 10, 64)
+	lr, err := parseQueryParam(w, vlr, http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	notify, err := strconv.ParseBool(vars[LASTREPORTEDNOTIFY])
+	notify, err := parseQueryBool(w, vars[LASTREPORTEDNOTIFY], http.StatusServiceUnavailable)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -812,29 +694,20 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 
 func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	n, err := queryUnescape(w, vars[NAME], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
-	lr, err := strconv.ParseInt(vlr, 10, 64)
+	lr, err := parseQueryParam(w, vlr, http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -850,35 +723,24 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 
 func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	n, err := url.QueryUnescape(vars[NAME])
+	n, err := queryUnescape(w, vars[NAME], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
-	lr, err := strconv.ParseInt(vlr, 10, 64)
+	lr, err := parseQueryParam(w, vlr, http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	notify, err := strconv.ParseBool(vars[LASTREPORTEDNOTIFY])
+	notify, err := parseQueryBool(w, vars[LASTREPORTEDNOTIFY], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
 
@@ -910,23 +772,16 @@ func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWr
 
 func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	dn, err := url.QueryUnescape(vars[NAME])
+	dn, err := queryUnescape(w, vars[NAME], http.StatusBadRequest)
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	res, err := dbClient.GetDeviceByName(dn)
 	if err != nil {
-		if err == db.ErrNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		LoggingClient.Error(err.Error())
+		httperror.HandleDbErrorWithInternalServerErrorFallback(w, LoggingClient, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -964,5 +819,54 @@ func postNotification(name string, action string, ctx context.Context) {
 		}
 
 		nc.SendNotification(notification, ctx)
+	}
+}
+
+// Wraps parseBool with error handling
+func parseQueryBool(w http.ResponseWriter, p string, sc int) (bool, error) {
+	notify, err := strconv.ParseBool(p)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), sc)
+		return false, err
+	}
+
+	return notify, nil
+}
+
+// Wraps parseInt with error handling
+func parseQueryParam(w http.ResponseWriter, p string, sc int) (int64, error) {
+	lc, err := strconv.ParseInt(p, 10, 64)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), sc)
+		return 0, err
+	}
+
+	return lc, nil
+}
+
+// Wraps queryUnescape with error handling
+func queryUnescape(w http.ResponseWriter, p string, sc int) (string, error) {
+	qp, err := url.QueryUnescape(p)
+	if err != nil {
+		LoggingClient.Error(err.Error())
+		http.Error(w, err.Error(), sc)
+		return "", err
+	}
+
+	return qp, nil
+}
+
+// Maps Device error to an HTTP Response
+func handleDeviceError(w http.ResponseWriter, err error) {
+	LoggingClient.Error(err.Error())
+	switch err.(type) {
+	case errors.ErrDuplicateName:
+		http.Error(w, err.Error(), http.StatusConflict)
+	case errors.ErrItemNotFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

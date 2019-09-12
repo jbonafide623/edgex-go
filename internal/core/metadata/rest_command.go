@@ -14,25 +14,21 @@
 package metadata
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 
-	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/gorilla/mux"
 )
 
 func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
-		switch err.(type) {
-		case types.ErrLimitExceeded:
-			http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		httperror.HandleGetAllError(w, LoggingClient, err)
 		return
 	}
 	pkg.Encode(&cmds, w, LoggingClient)
@@ -50,13 +46,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		handlerGetCommandError(w, err)
 		return
 	}
 	pkg.Encode(cmd, w, LoggingClient)
@@ -92,14 +82,19 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		switch err.(type) {
-		case types.ErrItemNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		handlerGetCommandError(w, err)
 		return
 	}
 	pkg.Encode(&commands, w, LoggingClient)
+}
+
+// Maps command retrieval errors to an HTTP Response
+func handlerGetCommandError(w http.ResponseWriter, err error) {
+	LoggingClient.Error(err.Error())
+	switch err.(type) {
+	case errors.ErrItemNotFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

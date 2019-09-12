@@ -20,6 +20,8 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
@@ -40,7 +42,7 @@ func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(&res)
 }
 
@@ -64,7 +66,7 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errMessage, http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.Write([]byte("true"))
 }
 
@@ -95,7 +97,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 		LoggingClient.Error("Problem deleting provision watcher: " + err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
@@ -131,7 +133,7 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -156,7 +158,7 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -178,7 +180,7 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -211,7 +213,7 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -233,7 +235,7 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -267,7 +269,7 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -293,7 +295,7 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -397,13 +399,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, "Provision watcher not found", http.StatusNotFound)
-				LoggingClient.Error("Provision watcher not found: " + err.Error())
-			} else {
-				LoggingClient.Error("Problem getting provision watcher: " + err.Error())
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			}
+			httperror.HandleDbErrorWithServiceUnavailableFallback(w, LoggingClient, err)
 			return
 		}
 	}
@@ -423,7 +419,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err := notifyProvisionWatcherAssociates(to, http.MethodPut); err != nil {
 		LoggingClient.Error("Problem notifying associated device services for provision watcher: " + err.Error())
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
