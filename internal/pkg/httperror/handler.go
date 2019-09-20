@@ -61,6 +61,16 @@ func (r StatusServiceUnavailableErrorConcept) isA(err error) bool {
 	return false
 }
 
+type StatusNotFoundErrorConcept struct{}
+
+func (r StatusNotFoundErrorConcept) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r StatusNotFoundErrorConcept) isA(err error) bool {
+	return true
+}
+
 func ToHttpError(w http.ResponseWriter, l logger.LoggingClient, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
 	// handles error
 	var doError = func(errorCode int) {
