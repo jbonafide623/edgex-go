@@ -71,6 +71,16 @@ func (r StatusNotFoundErrorConcept) isA(err error) bool {
 	return true
 }
 
+type StatusConflictErrorConcept struct{}
+
+func (r StatusConflictErrorConcept) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r StatusConflictErrorConcept) isA(err error) bool {
+	return true
+}
+
 func ToHttpError(w http.ResponseWriter, l logger.LoggingClient, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
 	// handles error
 	var doError = func(errorCode int) {
