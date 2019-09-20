@@ -164,14 +164,14 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	t, err := url.QueryUnescape(vars[TOPIC])
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusBadRequestErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := addressable.NewTopicExecutor(dbClient, t)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -183,14 +183,14 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 	var strp string = vars[PORT]
 	p, err := strconv.Atoi(strp)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusBadRequestErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := addressable.NewPortExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -201,7 +201,7 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	p, err := url.QueryUnescape(vars[PUBLISHER])
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusBadRequestErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
@@ -220,14 +220,14 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	a, err := url.QueryUnescape(vars[ADDRESS])
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusBadRequestErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := addressable.NewAddressExecutor(dbClient, a)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{},  httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 

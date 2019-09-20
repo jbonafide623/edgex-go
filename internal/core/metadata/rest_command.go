@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
@@ -28,7 +27,7 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
-		httperror.HandleGetAllError(w, LoggingClient, err)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.StatusRequestEntityTooLargeErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(&cmds, w, LoggingClient)
@@ -38,15 +37,14 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		handlerGetCommandError(w, err)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.CommandNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(cmd, w, LoggingClient)
@@ -56,15 +54,13 @@ func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 	op := command.NewCommandsByName(dbClient, n)
 	cmds, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(&cmds, w, LoggingClient)
@@ -74,27 +70,15 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		handlerGetCommandError(w, err)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.CommandNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(&commands, w, LoggingClient)
-}
-
-// Maps command retrieval errors to an HTTP Response
-func handlerGetCommandError(w http.ResponseWriter, err error) {
-	LoggingClient.Error(err.Error())
-	switch err.(type) {
-	case errors.ErrItemNotFound:
-		http.Error(w, err.Error(), http.StatusNotFound)
-	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }

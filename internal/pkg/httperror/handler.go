@@ -28,7 +28,7 @@ func (r StatusRequestEntityTooLargeErrorConcept) isA(err error) bool {
 	}
 }
 
-type StatusBadRequestErrorConcept struct {}
+type StatusBadRequestErrorConcept struct{}
 
 func (r StatusBadRequestErrorConcept) httpErrorCode() int {
 	return http.StatusBadRequest
@@ -50,8 +50,7 @@ func (r StatusInternalServerErrorConcept) isA(err error) bool {
 	return false
 }
 
-
-type StatusServiceUnavailableErrorConcept struct {}
+type StatusServiceUnavailableErrorConcept struct{}
 
 func (r StatusServiceUnavailableErrorConcept) httpErrorCode() int {
 	return http.StatusServiceUnavailable

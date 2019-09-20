@@ -62,7 +62,6 @@ func (r DatabaseNotFoundErrorConcept) isA(err error) bool {
 	return err == db.ErrNotFound
 }
 
-
 type AddressableInUseErrorConcept struct{}
 
 func (r AddressableInUseErrorConcept) httpErrorCode() int {
