@@ -1,6 +1,7 @@
 package httperror
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"net/http"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -10,6 +11,55 @@ import (
 type ErrorConceptType interface {
 	httpErrorCode() int
 	isA(err error) bool
+}
+
+type StatusRequestEntityTooLargeErrorConcept struct{}
+
+func (r StatusRequestEntityTooLargeErrorConcept) httpErrorCode() int {
+	return http.StatusRequestEntityTooLarge
+}
+
+func (r StatusRequestEntityTooLargeErrorConcept) isA(err error) bool {
+	switch err.(type) {
+	case errors.ErrLimitExceeded:
+		return true
+	default:
+		return false
+	}
+}
+
+type StatusBadRequestErrorConcept struct {}
+
+func (r StatusBadRequestErrorConcept) httpErrorCode() int {
+	return http.StatusBadRequest
+}
+
+func (r StatusBadRequestErrorConcept) isA(err error) bool {
+	// TODO Is this right?
+	return false
+}
+
+type StatusInternalServerErrorConcept struct{}
+
+func (r StatusInternalServerErrorConcept) httpErrorCode() int {
+	return http.StatusInternalServerError
+}
+
+func (r StatusInternalServerErrorConcept) isA(err error) bool {
+	// TODO Is this right?
+	return false
+}
+
+
+type StatusServiceUnavailableErrorConcept struct {}
+
+func (r StatusServiceUnavailableErrorConcept) httpErrorCode() int {
+	return http.StatusServiceUnavailable
+}
+
+func (r StatusServiceUnavailableErrorConcept) isA(err error) bool {
+	// TODO not sure if this makes the most sense
+	return false
 }
 
 func ToHttpError(w http.ResponseWriter, l logger.LoggingClient, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {

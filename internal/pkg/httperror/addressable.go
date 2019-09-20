@@ -62,30 +62,6 @@ func (r DatabaseNotFoundErrorConcept) isA(err error) bool {
 	return err == db.ErrNotFound
 }
 
-type StatusRequestEntityTooLargeErrorConcept struct{}
-
-func (r StatusRequestEntityTooLargeErrorConcept) httpErrorCode() int {
-	return http.StatusRequestEntityTooLarge
-}
-
-func (r StatusRequestEntityTooLargeErrorConcept) isA(err error) bool {
-	switch err.(type) {
-	case errors.ErrLimitExceeded:
-		return true
-	default:
-		return false
-	}
-}
-
-type StatusInternalServerErrorConcept struct{}
-
-func (r StatusInternalServerErrorConcept) httpErrorCode() int {
-	return http.StatusInternalServerError
-}
-
-func (r StatusInternalServerErrorConcept) isA(err error) bool {
-	return false
-}
 
 type AddressableInUseErrorConcept struct{}
 
