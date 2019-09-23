@@ -44,7 +44,7 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.CommandNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(cmd, w, LoggingClient)
@@ -77,7 +77,7 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.CommandNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	pkg.Encode(&commands, w, LoggingClient)

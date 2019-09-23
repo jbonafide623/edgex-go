@@ -21,6 +21,7 @@ type StatusNotFoundErrorConcept struct{}
 type StatusConflictErrorConcept struct{}
 type DatabaseNotFoundErrorConcept struct{}
 type DuplicateIdentifierErrorConcept struct{}
+type ItemNotFoundErrorConcept struct{}
 
 func (r StatusRequestEntityTooLargeErrorConcept) httpErrorCode() int {
 	return http.StatusRequestEntityTooLarge
@@ -92,6 +93,15 @@ func (r DuplicateIdentifierErrorConcept) httpErrorCode() int {
 
 func (r DuplicateIdentifierErrorConcept) isA(err error) bool {
 	_, ok := err.(errors.ErrDuplicateName)
+	return ok
+}
+
+func (r ItemNotFoundErrorConcept) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r ItemNotFoundErrorConcept) isA(err error) bool {
+	_, ok := err.(errors.ErrItemNotFound)
 	return ok
 }
 
