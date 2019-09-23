@@ -165,15 +165,11 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	f, _, err := r.FormFile("file")
 	if err != nil {
-		switch err {
-		case http.ErrMissingFile:
-			err := errors.NewErrEmptyFile("YAML")
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
-			return
-		default:
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
-			return
+		if err == http.ErrMissingFile {
+			err = errors.NewErrEmptyFile("YAML")
 		}
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceProfileMissingFileErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		return
 	}
 
 	data, err := ioutil.ReadAll(f)
@@ -182,8 +178,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(data) == 0 {
-		err := errors.NewErrEmptyFile("YAML")
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, errors.NewErrEmptyFile("YAML"), []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
@@ -203,7 +198,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	id, err := op.Execute()
 
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceProfileInvalidStateErrorConcept{}, httperror.DeviceProfileContractInvalidErrorConcept{}, httperror.DuplicateDeviceProfileErrorConcept{}, httperror.EmptyDeviceProfileNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceProfileBadRequestErrorConcept{}, httperror.DeviceProfileContractInvalidErrorConcept{}, httperror.DuplicateIdentifierErrorConcept{}, httperror.DeviceProfileEmptyNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -238,7 +233,7 @@ func addDeviceProfile(dp models.DeviceProfile, dbClient interfaces.DBClient, w h
 	id, err := op.Execute()
 
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceProfileContractInvalidErrorConcept{}, httperror.DeviceProfileInvalidStateErrorConcept{}, httperror.DuplicateDeviceProfileErrorConcept{}, httperror.EmptyDeviceProfileNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceProfileContractInvalidErrorConcept{}, httperror.DeviceProfileBadRequestErrorConcept{}, httperror.DuplicateIdentifierErrorConcept{}, httperror.DeviceProfileEmptyNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
