@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// TODO figure out a use for this and exactly how this is common
 type DatabaseNotUniqueErrorConcept struct{}
 
 func (r DatabaseNotUniqueErrorConcept) httpErrorCode() int {

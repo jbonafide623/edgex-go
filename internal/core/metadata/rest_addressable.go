@@ -48,14 +48,14 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.EmptyAddressableNameErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	op := addressable.NewAddExecutor(dbClient, a)
 	id, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DuplicateIdentifierErrorConcept{}, httperror.EmptyAddressableNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DuplicateIdentifierErrorConcept{}, httperror.AddressableEmptyNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -72,7 +72,7 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.EmptyAddressableNameErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
 		return
 	}
 
@@ -152,7 +152,7 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 	op := addressable.NewNameExecutor(dbClient, dn)
 	result, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.AddressableNotFoundByNameErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -208,8 +208,7 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 	op := addressable.NewPublisherExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		LoggingClient.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
