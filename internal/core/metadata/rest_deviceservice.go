@@ -154,7 +154,7 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		// Check if the new name is unique
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DuplicateDeviceServiceErrorConcept{CheckDsId: checkDS.Id, ToId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
+			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDuplicateErrorConcept{OriginalDeviceServiceId: checkDS.Id, UpdatedDeviceServiceId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
 		}
 	}
 
@@ -177,7 +177,7 @@ func restGetServiceByAddressableName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByAddressableName(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -192,7 +192,7 @@ func restGetServiceByAddressableId(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByAddressableID(sid, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -229,7 +229,7 @@ func restGetServiceByName(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadByName(dn, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -244,7 +244,7 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists and get it
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -268,7 +268,7 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -333,7 +333,7 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -363,7 +363,7 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -396,7 +396,7 @@ func restGetServiceById(w http.ResponseWriter, r *http.Request) {
 	op := device_service.NewDeviceServiceLoadById(did, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -419,7 +419,7 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByIdExecutor(id, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -446,7 +446,7 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateOpStateByNameExecutor(n, newOs, dbClient)
 	if err := op.Execute(); err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -469,7 +469,7 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -496,7 +496,7 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 
 	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
 	if err := op.Execute(); err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -517,7 +517,7 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	// Check if the devicde service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -547,7 +547,7 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
 		return
 	}
 
