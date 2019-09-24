@@ -5,8 +5,8 @@ import (
 )
 
 type DeviceServiceDuplicateErrorConcept struct {
-	OriginalDeviceServiceId string
-	UpdatedDeviceServiceId  string
+	CurrentDSId string
+	UpdatedDSId string
 }
 
 func (r DeviceServiceDuplicateErrorConcept) httpErrorCode() int {
@@ -14,5 +14,5 @@ func (r DeviceServiceDuplicateErrorConcept) httpErrorCode() int {
 }
 
 func (r DeviceServiceDuplicateErrorConcept) isA(err error) bool {
-	return r.OriginalDeviceServiceId != r.UpdatedDeviceServiceId
+	return r.CurrentDSId != r.UpdatedDSId
 }

@@ -154,7 +154,7 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		// Check if the new name is unique
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDuplicateErrorConcept{OriginalDeviceServiceId: checkDS.Id, UpdatedDeviceServiceId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
+			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DeviceServiceDuplicateErrorConcept{CurrentDSId: checkDS.Id, UpdatedDSId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
 		}
 	}
 
