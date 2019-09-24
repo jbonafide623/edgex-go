@@ -185,7 +185,7 @@ func intervalActionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -237,7 +237,7 @@ func intervalActionByIdHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -289,7 +289,7 @@ func intervalActionByNameHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("true"))
 	}
@@ -374,7 +374,7 @@ func scrubIntervalActionsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(strconv.Itoa(count)))
 	}
