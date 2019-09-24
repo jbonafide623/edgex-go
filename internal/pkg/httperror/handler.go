@@ -20,6 +20,7 @@ type StatusServiceUnavailableErrorConcept struct{}
 type StatusNotFoundErrorConcept struct{}
 type StatusConflictErrorConcept struct{}
 type DatabaseNotFoundErrorConcept struct{}
+type DatabaseNotUniqueErrorConcept struct{}
 type DuplicateIdentifierErrorConcept struct{}
 type ItemNotFoundErrorConcept struct{}
 
@@ -85,6 +86,14 @@ func (r DatabaseNotFoundErrorConcept) httpErrorCode() int {
 
 func (r DatabaseNotFoundErrorConcept) isA(err error) bool {
 	return err == db.ErrNotFound
+}
+
+func (r DatabaseNotUniqueErrorConcept) httpErrorCode() int {
+	return http.StatusConflict
+}
+
+func (r DatabaseNotUniqueErrorConcept) isA(err error) bool {
+	return err == db.ErrNotUnique
 }
 
 func (r DuplicateIdentifierErrorConcept) httpErrorCode() int {
