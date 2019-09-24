@@ -17,6 +17,7 @@ package metadata
 import (
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
 	"os"
 	"os/signal"
 	"sync"
@@ -48,6 +49,7 @@ var LoggingClient logger.LoggingClient
 var registryClient registry.Client
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
+var HttpErrorHandler httperror.ErrorHandler
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
 
@@ -72,6 +74,7 @@ func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGrou
 				// Setup Logging
 				logTarget := setLoggingTarget()
 				LoggingClient = logger.NewClient(clients.CoreMetaDataServiceKey, Configuration.Logging.EnableRemote, logTarget, Configuration.Writable.LogLevel)
+				HttpErrorHandler = httperror.NewErrorHandler(LoggingClient)
 			}
 		}
 

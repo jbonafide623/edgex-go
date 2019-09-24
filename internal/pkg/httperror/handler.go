@@ -114,11 +114,24 @@ func (r ItemNotFoundErrorConcept) isA(err error) bool {
 	return ok
 }
 
-func ToHttpError(w http.ResponseWriter, l logger.LoggingClient, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
+type handler struct {
+	logger logger.LoggingClient
+}
+
+type ErrorHandler interface {
+	Handle(w http.ResponseWriter, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType)
+}
+
+func NewErrorHandler(l logger.LoggingClient) ErrorHandler {
+	h := handler{l}
+	return &h
+}
+
+func (e *handler) Handle(w http.ResponseWriter, err error, allowableErrors []ErrorConceptType, defaultError ErrorConceptType) {
 	// handles error
 	var doError = func(errorCode int) {
 		message := err.Error()
-		l.Error(message)
+		e.logger.Error(message)
 		http.Error(w, message, errorCode)
 	}
 
