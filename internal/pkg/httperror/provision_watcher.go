@@ -5,25 +5,25 @@ import (
 	"net/http"
 )
 
-type ProvisionWatcherDatabaseNotFoundErrorConcept struct{}
+type ProvisionWatcherDeviceServiceNotFoundErrorConcept struct{}
 
-func (r ProvisionWatcherDatabaseNotFoundErrorConcept) httpErrorCode() int {
+func (r ProvisionWatcherDeviceServiceNotFoundErrorConcept) httpErrorCode() int {
 	return http.StatusConflict
 }
 
-func (r ProvisionWatcherDatabaseNotFoundErrorConcept) isA(err error) bool {
+func (r ProvisionWatcherDeviceServiceNotFoundErrorConcept) isA(err error) bool {
 	return db.ErrNotFound == err
 }
 
-type DuplicateProvisionWatcherErrorConcept struct {
-	CurrentPwId string
-	UpdatedPwId string
+type ProvisionWatcherDuplicateErrorConcept struct {
+	CurrentPWId string
+	UpdatedPWId string
 }
 
-func (r DuplicateProvisionWatcherErrorConcept) httpErrorCode() int {
+func (r ProvisionWatcherDuplicateErrorConcept) httpErrorCode() int {
 	return http.StatusConflict
 }
 
-func (r DuplicateProvisionWatcherErrorConcept) isA(err error) bool {
-	return err != db.ErrNotFound && r.CurrentPwId != r.UpdatedPwId
+func (r ProvisionWatcherDuplicateErrorConcept) isA(err error) bool {
+	return err != db.ErrNotFound && r.CurrentPWId != r.UpdatedPWId
 }

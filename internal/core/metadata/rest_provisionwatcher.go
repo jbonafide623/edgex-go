@@ -273,7 +273,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if pw.Profile.Id == "" || err != nil {
 		// Try by name
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
 			return
 		}
 	}
@@ -288,7 +288,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if pw.Service.Id == "" || err != nil {
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
 			return
 		}
 	}
@@ -363,7 +363,7 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
 			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.DuplicateProvisionWatcherErrorConcept{CurrentPwId: checkPW.Id, UpdatedPwId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
+			httperror.ToHttpError(w, LoggingClient, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDuplicateErrorConcept{CurrentPWId: checkPW.Id, UpdatedPWId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
 		}
 		to.Name = from.Name
 	}
