@@ -6,7 +6,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-// Device represents the accessor for the device-specific error concepts
+// DeviceErrorConcept represents the accessor for the device-specific error concepts
 type DeviceErrorConcept struct {
 	ContractInvalid contractInvalid
 }
