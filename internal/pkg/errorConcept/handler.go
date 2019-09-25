@@ -1,10 +1,10 @@
-package httperror
+package errorConcept
 
 import (
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"net/http"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 

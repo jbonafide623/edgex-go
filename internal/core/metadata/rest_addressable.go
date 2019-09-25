@@ -20,23 +20,39 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorConcept"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
 
+// Global variables
+var AddressableErrorConcept errorConcept.AddressableErrorConcept
+var DefaultErrorConcept errorConcept.Default
+var DatabaseErrorConcept errorConcept.Database
+var CommonErrorConcept errorConcept.Common
+
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, LoggingClient)
 	addressables, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.StatusRequestEntityTooLargeErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				CommonErrorConcept.RequestEntityTooLarge,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	err = json.NewEncoder(w).Encode(&addressables)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 }
@@ -48,14 +64,25 @@ func restAddAddressable(w http.ResponseWriter, r *http.Request) {
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewAddExecutor(dbClient, a)
 	id, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DuplicateIdentifierErrorConcept{}, httperror.AddressableEmptyNameErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				CommonErrorConcept.DuplicateIdentifier,
+				AddressableErrorConcept.EmptyName,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -72,14 +99,25 @@ func restUpdateAddressable(w http.ResponseWriter, r *http.Request) {
 	var a models.Addressable
 	err := json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewUpdateExecutor(dbClient, a)
 	err = op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.AddressableNotFoundErrorConcept{}, httperror.AddressableInUseErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				AddressableErrorConcept.NotFound,
+				AddressableErrorConcept.InUse,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -98,7 +136,13 @@ func restGetAddressableById(w http.ResponseWriter, r *http.Request) {
 	op := addressable.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -112,7 +156,14 @@ func restDeleteAddressableById(w http.ResponseWriter, r *http.Request) {
 	op := addressable.NewDeleteByIdExecutor(dbClient, id)
 	err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.AddressableNotFoundErrorConcept{}, httperror.AddressableInUseErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				AddressableErrorConcept.NotFound,
+				AddressableErrorConcept.InUse,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -125,14 +176,25 @@ func restDeleteAddressableByName(w http.ResponseWriter, r *http.Request) {
 	name, err := url.QueryUnescape(vars[NAME])
 	// Problems unescaping
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
 	op := addressable.NewDeleteByNameExecutor(dbClient, name)
 	err = op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.AddressableNotFoundErrorConcept{}, httperror.AddressableInUseErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				AddressableErrorConcept.NotFound,
+				AddressableErrorConcept.InUse,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -145,14 +207,24 @@ func restGetAddressableByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
 	op := addressable.NewNameExecutor(dbClient, dn)
 	result, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
@@ -164,14 +236,22 @@ func restGetAddressableByTopic(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	t, err := url.QueryUnescape(vars[TOPIC])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewTopicExecutor(dbClient, t)
 	res, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -183,14 +263,22 @@ func restGetAddressableByPort(w http.ResponseWriter, r *http.Request) {
 	var strp string = vars[PORT]
 	p, err := strconv.Atoi(strp)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewPortExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -201,14 +289,22 @@ func restGetAddressableByPublisher(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	p, err := url.QueryUnescape(vars[PUBLISHER])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewPublisherExecutor(dbClient, p)
 	res, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -219,14 +315,22 @@ func restGetAddressableByAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	a, err := url.QueryUnescape(vars[ADDRESS])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := addressable.NewAddressExecutor(dbClient, a)
 	res, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 

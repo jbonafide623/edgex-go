@@ -26,7 +26,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorConcept"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -39,7 +39,7 @@ func restGetAllDevices(w http.ResponseWriter, _ *http.Request) {
 	op := device.NewDeviceLoadAll(Configuration.Service, dbClient, LoggingClient)
 	devices, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.StatusRequestEntityTooLargeErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.StatusRequestEntityTooLargeErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -56,7 +56,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	var d models.Device
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DeviceContractInvalidErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DeviceContractInvalidErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -66,7 +66,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	// requester interface should be mocked for unit testability and so is injected into the Notifier.
 	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -79,7 +79,7 @@ func restAddNewDevice(w http.ResponseWriter, r *http.Request) {
 	op := device.NewAddDevice(ch, dbClient, d)
 	newId, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DuplicateIdentifierErrorConcept{}, httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DuplicateIdentifierErrorConcept{}, errorConcept.ItemNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -95,7 +95,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 	var rd models.Device
 	err := json.NewDecoder(r.Body).Decode(&rd)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -106,7 +106,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 
 	requester, err := device.NewRequester(device.Http, LoggingClient, ctx)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -117,7 +117,7 @@ func restUpdateDevice(w http.ResponseWriter, r *http.Request) {
 	err = op.Execute()
 
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DuplicateIdentifierErrorConcept{}, httperror.ItemNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DuplicateIdentifierErrorConcept{}, errorConcept.ItemNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -129,13 +129,13 @@ func restGetDevicesWithLabel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	label, err := url.QueryUnescape(vars[LABEL])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetDevicesWithLabel(label)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -150,13 +150,13 @@ func restGetDeviceByProfileId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device profile exists
 	_, err := dbClient.GetDeviceProfileById(pid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetDevicesByProfileId(pid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -171,13 +171,13 @@ func restGetDeviceByServiceId(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	_, err := dbClient.GetDeviceServiceById(sid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetDevicesByServiceId(sid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -190,21 +190,21 @@ func restGetDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sn, err := url.QueryUnescape(vars[SERVICENAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Find devices by service ID now that you have the Service object (and therefor the ID)
 	res, err := dbClient.GetDevicesByServiceId(ds.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -216,21 +216,21 @@ func restGetDeviceByProfileName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[PROFILENAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Use profile ID now that you have the profile object
 	res, err := dbClient.GetDevicesByProfileId(dp.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -244,7 +244,7 @@ func restGetDeviceById(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -260,7 +260,7 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 	dev, err := dbClient.GetDeviceByName(token)
 	if err != nil {
 		if err != db.ErrNotFound {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 			return
 		} else {
 			LoggingClient.Debug(fmt.Sprintf("device %s %v", token, err))
@@ -270,7 +270,7 @@ func restCheckForDevice(w http.ResponseWriter, r *http.Request) {
 	//If lookup by name failed, see if we were passed the ID
 	if len(dev.Name) == 0 {
 		if dev, err = dbClient.GetDeviceById(token); err != nil {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}, httperror.DeviceDatabaseInvalidObjectErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}, errorConcept.DeviceDatabaseInvalidObjectErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 			return
 		}
 	}
@@ -325,19 +325,19 @@ func restSetDeviceStateById(w http.ResponseWriter, r *http.Request) {
 	var did = vars[ID]
 	updateMode, state, err := decodeState(r)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	if err = updateDeviceState(updateMode, state, d); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -351,25 +351,25 @@ func restSetDeviceStateByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	updateMode, state, err := decodeState(r)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
 	if err = updateDeviceState(updateMode, state, d); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -397,7 +397,7 @@ func restDeleteDeviceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
@@ -414,14 +414,14 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 
@@ -438,18 +438,18 @@ func restDeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 // Delete the device
 func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) error {
 	if err := deleteAssociatedReportsForDevice(d, w); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
 	if err := dbClient.DeleteDeviceById(d.Id); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
 	// Notify Associates
 	if err := notifyDeviceAssociates(d, http.MethodDelete, ctx); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
@@ -460,14 +460,14 @@ func deleteDevice(d models.Device, w http.ResponseWriter, ctx context.Context) e
 func deleteAssociatedReportsForDevice(d models.Device, w http.ResponseWriter) error {
 	reports, err := dbClient.GetDeviceReportByDeviceName(d.Name)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
 	// Delete the associated reports
 	for _, report := range reports {
 		if err := dbClient.DeleteDeviceReportById(report.Id); err != nil {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 			return err
 		}
 		notifyDeviceReportAssociates(report, http.MethodDelete)
@@ -482,14 +482,14 @@ func restSetDeviceLastConnectedById(w http.ResponseWriter, r *http.Request) {
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -510,19 +510,19 @@ func restSetLastConnectedByIdNotify(w http.ResponseWriter, r *http.Request) {
 	var vlc = vars[LASTCONNECTED]
 	notify, err := strconv.ParseBool(vars[LASTCONNECTEDNOTIFY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -540,20 +540,20 @@ func restSetDeviceLastConnectedByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -571,25 +571,25 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
 	lc, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 	notify, err := strconv.ParseBool(vars[LASTCONNECTEDNOTIFY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -607,7 +607,7 @@ func restSetDeviceLastConnectedByNameNotify(w http.ResponseWriter, r *http.Reque
 func setLastConnected(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
 	d.LastConnected = time
 	if err := dbClient.UpdateDevice(d); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
@@ -624,14 +624,14 @@ func restSetDeviceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -651,19 +651,19 @@ func restSetDeviceLastReportedByIdNotify(w http.ResponseWriter, r *http.Request)
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 	notify, err := strconv.ParseBool(vars[LASTREPORTEDNOTIFY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -681,20 +681,20 @@ func restSetDeviceLastReportedByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -712,25 +712,25 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	var vlr string = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	notify, err := strconv.ParseBool(vars[LASTREPORTEDNOTIFY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -748,7 +748,7 @@ func restSetDeviceLastReportedByNameNotify(w http.ResponseWriter, r *http.Reques
 func setLastReported(d models.Device, time int64, notify bool, w http.ResponseWriter, ctx context.Context) error {
 	d.LastReported = time
 	if err := dbClient.UpdateDevice(d); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
@@ -763,12 +763,12 @@ func restGetDeviceByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	dn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	res, err := dbClient.GetDeviceByName(dn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)

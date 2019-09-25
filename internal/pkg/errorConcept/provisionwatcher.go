@@ -1,4 +1,4 @@
-package httperror
+package errorConcept
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"

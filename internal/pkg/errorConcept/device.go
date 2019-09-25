@@ -1,4 +1,4 @@
-package httperror
+package errorConcept
 
 import (
 	"net/http"

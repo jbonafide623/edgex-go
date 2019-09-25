@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/httperror"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorConcept"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
@@ -28,14 +28,14 @@ import (
 func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 	res, err := dbClient.GetAllProvisionWatchers()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check the length
 	if len(res) > Configuration.Service.MaxResultCount {
 		err := errors.New("Max limit exceeded")
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusRequestEntityTooLargeErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusRequestEntityTooLargeErrorConcept{})
 		return
 	}
 
@@ -50,13 +50,13 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 
 	err = deleteProvisionWatcher(pw, w)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -67,14 +67,14 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -90,7 +90,7 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 // Delete the provision watcher
 func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) error {
 	if err := dbClient.DeleteProvisionWatcherById(pw.Id); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return err
 	}
 
@@ -107,7 +107,7 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -119,13 +119,13 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -139,13 +139,13 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device profile exists
 	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(pid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -157,20 +157,20 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -184,13 +184,13 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device service exists
 	if _, err := dbClient.GetDeviceServiceById(sid); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByServiceId(sid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -202,21 +202,21 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	sn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
 	// Get the provision watchers
 	res, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusNotFoundErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
 		return
 	}
 
@@ -228,18 +228,18 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	k, err := url.QueryUnescape(vars[KEY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 	v, err := url.QueryUnescape(vars[VALUE])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByIdentifier(k, v)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
 		return
 	}
 
@@ -253,14 +253,14 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if err = json.NewDecoder(r.Body).Decode(&pw); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
 	// Check if the name exists
 	if pw.Name == "" {
 		err = errors.New("No name provided for new provision watcher")
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusConflictErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusConflictErrorConcept{})
 		return
 	}
 
@@ -273,7 +273,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if pw.Profile.Id == "" || err != nil {
 		// Try by name
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 			return
 		}
 	}
@@ -288,7 +288,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if pw.Service.Id == "" || err != nil {
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 			return
 		}
 	}
@@ -296,7 +296,7 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	id, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotUniqueErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotUniqueErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -316,7 +316,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.ProvisionWatcher
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -326,7 +326,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.DatabaseNotFoundErrorConcept{}}, httperror.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 			return
 		}
 	}
@@ -337,7 +337,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := dbClient.UpdateProvisionWatcher(to); err != nil {
-		HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{}, httperror.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		return
 	}
 
@@ -363,7 +363,7 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
 			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			HttpErrorHandler.Handle(w, err, []httperror.ErrorConceptType{httperror.ProvisionWatcherDuplicateErrorConcept{CurrentPWId: checkPW.Id, UpdatedPWId: to.Id}}, httperror.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDuplicateErrorConcept{CurrentPWId: checkPW.Id, UpdatedPWId: to.Id}}, errorConcept.StatusServiceUnavailableErrorConcept{})
 		}
 		to.Name = from.Name
 	}
