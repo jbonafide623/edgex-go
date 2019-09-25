@@ -28,9 +28,6 @@ import (
 
 // Global variables
 var AddressableErrorConcept errorConcept.AddressableErrorConcept
-var DefaultErrorConcept errorConcept.Default
-var DatabaseErrorConcept errorConcept.Database
-var CommonErrorConcept errorConcept.Common
 
 func restGetAllAddressables(w http.ResponseWriter, _ *http.Request) {
 	op := addressable.NewAddressableLoadAll(Configuration.Service, dbClient, LoggingClient)

@@ -27,7 +27,13 @@ func restGetAllCommands(w http.ResponseWriter, _ *http.Request) {
 	op := command.NewCommandLoadAll(Configuration.Service, dbClient)
 	cmds, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.StatusRequestEntityTooLargeErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				CommonErrorConcept.RequestEntityTooLarge,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	pkg.Encode(&cmds, w, LoggingClient)
@@ -37,14 +43,24 @@ func restGetCommandById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cid, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := command.NewCommandById(dbClient, cid)
 	cmd, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ItemNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				CommonErrorConcept.ItemNotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	pkg.Encode(cmd, w, LoggingClient)
@@ -54,13 +70,21 @@ func restGetCommandsByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 	op := command.NewCommandsByName(dbClient, n)
 	cmds, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	pkg.Encode(&cmds, w, LoggingClient)
@@ -70,14 +94,24 @@ func restGetCommandsByDeviceId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	did, err := url.QueryUnescape(vars[ID])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	op := command.NewDeviceIdExecutor(dbClient, did)
 	commands, err := op.Execute()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ItemNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				CommonErrorConcept.ItemNotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 	pkg.Encode(&commands, w, LoggingClient)

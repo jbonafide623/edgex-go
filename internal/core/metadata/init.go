@@ -49,9 +49,14 @@ var LoggingClient logger.LoggingClient
 var registryClient registry.Client
 var nc notifications.NotificationsClient
 var vdc coredata.ValueDescriptorClient
-var HttpErrorHandler errorConcept.ErrorHandler
 var registryErrors chan error        //A channel for "config wait errors" sourced from Registry
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
+
+// Global ErrorConcept variables
+var CommonErrorConcept errorConcept.Common
+var DefaultErrorConcept errorConcept.Default
+var DatabaseErrorConcept errorConcept.Database
+var HttpErrorHandler errorConcept.ErrorHandler
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))

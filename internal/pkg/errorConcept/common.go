@@ -10,6 +10,7 @@ import (
 type Common struct {
 	RequestEntityTooLarge commonRequestEntityTooLarge
 	DuplicateIdentifier   duplicateIdentifier
+	ItemNotFound          itemNotFound
 }
 
 type commonRequestEntityTooLarge struct{}
@@ -33,5 +34,17 @@ func (r duplicateIdentifier) httpErrorCode() int {
 // isA should not be called considering it is a fallback error concept
 func (r duplicateIdentifier) isA(err error) bool {
 	_, ok := err.(errors.ErrDuplicateName)
+	return ok
+}
+
+type itemNotFound struct{}
+
+func (r itemNotFound) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+// isA should not be called considering it is a fallback error concept
+func (r itemNotFound) isA(err error) bool {
+	_, ok := err.(errors.ErrItemNotFound)
 	return ok
 }
