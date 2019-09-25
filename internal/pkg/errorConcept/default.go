@@ -5,7 +5,7 @@ import (
 )
 
 // Default represents a fallback error concept only
-type Default struct {
+type DefaultErrorConcept struct {
 	BadRequest            badRequest
 	RequestEntityTooLarge requestEntityTooLarge
 	InternalServerError   internalServerError

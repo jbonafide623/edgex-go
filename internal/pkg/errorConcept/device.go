@@ -3,26 +3,21 @@ package errorConcept
 import (
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-type DeviceContractInvalidErrorConcept struct{}
-type DeviceDatabaseInvalidObjectErrorConcept struct{}
+// Device represents the accessor for the device-specific error concepts
+type DeviceErrorConcept struct {
+	ContractInvalid contractInvalid
+}
 
-func (r DeviceDatabaseInvalidObjectErrorConcept) httpErrorCode() int {
+type contractInvalid struct{}
+
+func (r contractInvalid) httpErrorCode() int {
 	return http.StatusBadRequest
 }
 
-func (r DeviceDatabaseInvalidObjectErrorConcept) isA(err error) bool {
-	return err == db.ErrInvalidObjectId
-}
-
-func (r DeviceContractInvalidErrorConcept) httpErrorCode() int {
-	return http.StatusBadRequest
-}
-
-func (r DeviceContractInvalidErrorConcept) isA(err error) bool {
+func (r contractInvalid) isA(err error) bool {
 	_, ok := err.(models.ErrContractInvalid)
 	return ok
 }

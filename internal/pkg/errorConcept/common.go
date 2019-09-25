@@ -7,7 +7,7 @@ import (
 )
 
 // Common represents error concepts which apply across core-services
-type Common struct {
+type CommonErrorConcept struct {
 	RequestEntityTooLarge commonRequestEntityTooLarge
 	DuplicateIdentifier   duplicateIdentifier
 	ItemNotFound          itemNotFound

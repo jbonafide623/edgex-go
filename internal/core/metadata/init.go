@@ -53,9 +53,9 @@ var registryErrors chan error        //A channel for "config wait errors" source
 var registryUpdates chan interface{} //A channel for "config updates" sourced from Registry.
 
 // Global ErrorConcept variables
-var CommonErrorConcept errorConcept.Common
-var DefaultErrorConcept errorConcept.Default
-var DatabaseErrorConcept errorConcept.Database
+var CommonErrorConcept errorConcept.CommonErrorConcept
+var DefaultErrorConcept errorConcept.DefaultErrorConcept
+var DatabaseErrorConcept errorConcept.DatabaseErrorConcept
 var HttpErrorHandler errorConcept.ErrorHandler
 
 func Retry(useRegistry bool, useProfile string, timeout int, wait *sync.WaitGroup, ch chan error) {
