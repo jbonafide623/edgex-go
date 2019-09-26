@@ -2,6 +2,7 @@ package errorConcept
 
 import "github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 
+// TODO Is there a better way?
 // NewServiceClientHttpError represents the accessor for the service-client-specific error concepts
 func NewServiceClientHttpError(err error) *serviceClientHttpError {
 	return &serviceClientHttpError{Err: err}
