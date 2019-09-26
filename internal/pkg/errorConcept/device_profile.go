@@ -1,10 +1,11 @@
 package errorConcept
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"errors"
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // DeviceProfileErrorConcept represents the accessor for the device-profile-specific error concepts
@@ -17,18 +18,28 @@ type DeviceProfileErrorConcept struct {
 	ContractInvalid            deviceProfileContractInvalid
 	EmptyName                  deviceProfileEmptyName
 	ContractInvalid_BadRequest deviceProfileContractInvalid_BadRequest
+	InternalServerError        deviceProfileInternalServerError
 }
 
+// deviceProfileDuplicateName implements ExplicitErrorConceptType
 type deviceProfileDuplicateName struct {
 	err error
 }
 
-func (r deviceProfileDuplicateName) httpError() int {
+func (r deviceProfileDuplicateName) httpErrorCode() int {
 	return http.StatusConflict
 }
 
 func (r deviceProfileDuplicateName) isA(err error) bool {
 	panic("this is a default method")
+}
+
+func (r deviceProfileDuplicateName) httpError(err error) error {
+	return errors.New("Duplicate name for device profile")
+}
+
+func (r deviceProfileDuplicateName) logMessage(err error) string {
+	return err.Error()
 }
 
 type deviceProfileNotFound struct{}
@@ -38,7 +49,7 @@ func (r deviceProfileNotFound) httpErrorCode() int {
 }
 
 func (r deviceProfileNotFound) isA(err error) bool {
-	_, ok := err.(errors.ErrDeviceProfileNotFound)
+	_, ok := err.(metadataErrors.ErrDeviceProfileNotFound)
 	return ok
 }
 
@@ -49,19 +60,27 @@ func (r deviceProfileInvalidState) httpErrorCode() int {
 }
 
 func (r deviceProfileInvalidState) isA(err error) bool {
-	_, ok := err.(errors.ErrDeviceProfileInvalidState)
+	_, ok := err.(metadataErrors.ErrDeviceProfileInvalidState)
 	return ok
 }
 
+// deviceProfileMissingFile implements ExplicitErrorConceptType
 type deviceProfileMissingFile struct{}
 
 func (r deviceProfileMissingFile) httpErrorCode() int {
 	return http.StatusBadRequest
 }
 
-// TODO Custom Error
 func (r deviceProfileMissingFile) isA(err error) bool {
-	return err == errors.NewErrEmptyFile("YAML")
+	return err == http.ErrMissingFile
+}
+
+func (r deviceProfileMissingFile) httpError(err error) error {
+	return metadataErrors.NewErrEmptyFile("YAML")
+}
+
+func (r deviceProfileMissingFile) logMessage(err error) string {
+	return err.Error()
 }
 
 type deviceProfileInvalidState_BadRequest struct{}
@@ -71,7 +90,7 @@ func (r deviceProfileInvalidState_BadRequest) httpErrorCode() int {
 }
 
 func (r deviceProfileInvalidState_BadRequest) isA(err error) bool {
-	_, ok := err.(errors.ErrDeviceProfileInvalidState)
+	_, ok := err.(metadataErrors.ErrDeviceProfileInvalidState)
 	return ok
 }
 
@@ -93,7 +112,7 @@ func (r deviceProfileEmptyName) httpErrorCode() int {
 }
 
 func (r deviceProfileEmptyName) isA(err error) bool {
-	_, ok := err.(errors.ErrEmptyDeviceProfileName)
+	_, ok := err.(metadataErrors.ErrEmptyDeviceProfileName)
 	return ok
 }
 
@@ -108,84 +127,21 @@ func (r deviceProfileContractInvalid_BadRequest) isA(err error) bool {
 	return ok
 }
 
-//type DeviceProfileServiceClientErrorConcept struct {
-//	Err error
-//}
-//type DeviceProfileNotFoundErrorConcept struct{}
-//type ValueDescriptorsInUseErrorConcept struct{}
-//type DeviceProfileInvalidStateErrorConcept struct{}
-//type DeviceProfileBadRequestErrorConcept struct{}
-//type DeviceProfileEmptyNameErrorConcept struct{}
-//type DeviceProfileContractInvalidErrorConcept struct{}
-//type DeviceProfileMissingFileErrorConcept struct{}
-//
-//func (r DeviceProfileServiceClientErrorConcept) httpErrorCode() int {
-//	return r.Err.(types.ErrServiceClient).StatusCode
-//}
-//
-//func (r DeviceProfileServiceClientErrorConcept) isA(err error) bool {
-//	_, ok := err.(types.ErrServiceClient)
-//	return ok
-//}
-//
-//func (r DeviceProfileNotFoundErrorConcept) httpErrorCode() int {
-//	return http.StatusNotFound
-//}
-//
-//func (r DeviceProfileNotFoundErrorConcept) isA(err error) bool {
-//	_, ok := err.(errors.ErrDeviceProfileNotFound)
-//	return ok
-//}
-//
-//func (r ValueDescriptorsInUseErrorConcept) httpErrorCode() int {
-//	return http.StatusConflict
-//}
-//
-//func (r ValueDescriptorsInUseErrorConcept) isA(err error) bool {
-//	_, ok := err.(dataErrors.ErrValueDescriptorsInUse)
-//	return ok
-//}
-//
-//func (r DeviceProfileInvalidStateErrorConcept) httpErrorCode() int {
-//	return http.StatusConflict
-//}
-//
-//func (r DeviceProfileInvalidStateErrorConcept) isA(err error) bool {
-//	_, ok := err.(errors.ErrDeviceProfileInvalidState)
-//	return ok
-//}
-//
-//func (r DeviceProfileBadRequestErrorConcept) httpErrorCode() int {
-//	return http.StatusBadRequest
-//}
-//
-//func (r DeviceProfileBadRequestErrorConcept) isA(err error) bool {
-//	_, ok := err.(errors.ErrDeviceProfileInvalidState)
-//	return ok
-//}
-//
-//func (r DeviceProfileEmptyNameErrorConcept) httpErrorCode() int {
-//	return http.StatusBadRequest
-//}
-//
-//func (r DeviceProfileEmptyNameErrorConcept) isA(err error) bool {
-//	_, ok := err.(errors.ErrEmptyDeviceProfileName)
-//	return ok
-//}
-//
-//func (r DeviceProfileContractInvalidErrorConcept) httpErrorCode() int {
-//	return http.StatusConflict
-//}
-//
-//func (r DeviceProfileContractInvalidErrorConcept) isA(err error) bool {
-//	_, ok := err.(models.ErrContractInvalid)
-//	return ok
-//}
-//
-//func (r DeviceProfileMissingFileErrorConcept) httpErrorCode() int {
-//	return http.StatusBadRequest
-//}
-//
-//func (r DeviceProfileMissingFileErrorConcept) isA(err error) bool {
-//	return err == errors.NewErrEmptyFile("YAML")
-//}
+// deviceProfileInternalServerError implements ExplicitErrorConceptType
+type deviceProfileInternalServerError struct{}
+
+func (r deviceProfileInternalServerError) httpErrorCode() int {
+	return http.StatusInternalServerError
+}
+
+func (r deviceProfileInternalServerError) httpError(err error) error {
+	return err
+}
+
+func (r deviceProfileInternalServerError) isA(err error) bool {
+	panic("isA should not be invoked, this is a default error concept used only as a fallback")
+}
+
+func (r deviceProfileInternalServerError) logMessage(err error) string {
+	return err.Error()
+}

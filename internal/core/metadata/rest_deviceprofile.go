@@ -15,12 +15,12 @@ package metadata
 
 import (
 	"encoding/json"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
@@ -70,12 +70,11 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 		_, err := nameOp.Execute()
 		// The operator will return an ItemNotFound error if the DeviceProfile can not be found.
 		if err == nil {
-			// TODO Custom Error
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{},
-				DefaultErrorConcept.Conflict)
+				[]errorConcept.ExplicitErrorConceptType{},
+				DeviceProfileErrorConcept.DuplicateName)
 			return
 		}
 
@@ -232,17 +231,13 @@ func restDeleteProfileByName(w http.ResponseWriter, r *http.Request) {
 func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 	f, _, err := r.FormFile("file")
 	if err != nil {
-		if err == http.ErrMissingFile {
-			// TODO Custom Error
-			err = errors.NewErrEmptyFile("YAML")
-		}
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
+			[]errorConcept.ExplicitErrorConceptType{
 				DeviceProfileErrorConcept.MissingFile,
 			},
-			DefaultErrorConcept.InternalServerError)
+			DeviceProfileErrorConcept.InternalServerError)
 		return
 	}
 
@@ -256,12 +251,12 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(data) == 0 {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		err := errors.NewErrEmptyFile("YAML")
+		HttpErrorHandler.ExplicitHandle(
 			w,
-			errors.NewErrEmptyFile("YAML"),
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			err,
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceProfileErrorConcept.MissingFile)
 		return
 	}
 
