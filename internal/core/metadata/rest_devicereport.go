@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 
@@ -23,6 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // Global variables

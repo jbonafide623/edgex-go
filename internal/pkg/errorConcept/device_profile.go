@@ -30,7 +30,7 @@ func (r deviceProfileDuplicateName) httpErrorCode() int {
 }
 
 func (r deviceProfileDuplicateName) isA(err error) bool {
-	panic("this is a default method")
+	panic("isA should not be invoked, this is to only be used as a default error concept")
 }
 
 func (r deviceProfileDuplicateName) httpError(err error) error {

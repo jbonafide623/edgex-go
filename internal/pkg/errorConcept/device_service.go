@@ -56,7 +56,7 @@ func (r deviceServiceEmptyAddressable) httpError(err error) error {
 }
 
 func (r deviceServiceEmptyAddressable) isA(err error) bool {
-	panic("isA should not be invoked, this is a fallback error concept only")
+	panic("isA should not be invoked, this is to only be used as a default error concept")
 }
 
 func (r deviceServiceEmptyAddressable) logMessage(err error) string {
@@ -132,7 +132,7 @@ func (r deviceServiceInvalidState) httpError(err error) error {
 }
 
 func (r deviceServiceInvalidState) isA(err error) bool {
-	panic("isA should not be implemented, this is fallback error concept")
+	panic("isA should not be invoked, this is to only be used as a default error concept")
 }
 
 func (r deviceServiceInvalidState) logMessage(err error) string {

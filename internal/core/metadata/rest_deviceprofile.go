@@ -15,12 +15,12 @@ package metadata
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile"
