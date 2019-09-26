@@ -50,7 +50,7 @@ func (r provisionWatcherDuplicate) logMessage(err error) string {
 type provisionWatcherDSNotFound struct{}
 
 func (r provisionWatcherDSNotFound) httpErrorCode() int {
-	return http.StatusConflict
+	return http.StatusNotFound
 }
 
 func (r provisionWatcherDSNotFound) isA(err error) bool {
