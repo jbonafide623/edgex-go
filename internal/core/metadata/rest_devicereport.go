@@ -15,6 +15,7 @@ package metadata
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 
@@ -40,11 +41,12 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 
 	// Check max limit
 	if len(res) > Configuration.Service.MaxResultCount {
+		err = errors.New("Max limit exceeded")
 		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
 			[]errorConcept.ExplicitErrorConceptType{},
-			DeviceReportErrorConcept.LimitExceeded)
+			DefaultErrorConcept.RequestEntityTooLarge)
 		return
 	}
 

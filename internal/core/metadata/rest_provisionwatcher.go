@@ -41,11 +41,9 @@ func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 
 	// Check the length
 	if len(res) > Configuration.Service.MaxResultCount {
-		// TODO Custom Error
-		err := errors.New("Max limit exceeded")
 		HttpErrorHandler.Handle(
 			w,
-			err,
+			errors.New("Max limit exceeded"),
 			[]errorConcept.ErrorConceptType{},
 			DefaultErrorConcept.RequestEntityTooLarge)
 		return
@@ -62,21 +60,19 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
-			err,
+			errors.New("Provision Watcher not found by ID: "+err.Error()),
 			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.NotFound)
+			ProvisionWatcherErrorConcept.NotFoundById)
 		return
 	}
 
 	err = deleteProvisionWatcher(pw, w)
 	if err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
-			err,
+			errors.New("Error deleting provision watcher"),
 			[]errorConcept.ErrorConceptType{},
 			DefaultErrorConcept.NotFound)
 		return
@@ -100,12 +96,11 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.NotFoundByName,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -144,12 +139,11 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.NotFoundById,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -173,12 +167,11 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.NotFoundByName,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -194,7 +187,6 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device profile exists
 	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -205,7 +197,6 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(pid)
 	if err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -233,12 +224,11 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.DeviceProfileNotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -246,7 +236,6 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
 	if err != nil {
-		// TODO Custom Log
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -265,10 +254,9 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device service exists
 	if _, err := dbClient.GetDeviceServiceById(sid); err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
-			err,
+			errors.New("Device Service not found"),
 			[]errorConcept.ErrorConceptType{},
 			DefaultErrorConcept.NotFound)
 		return
@@ -276,7 +264,6 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 
 	res, err := dbClient.GetProvisionWatchersByServiceId(sid)
 	if err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -304,12 +291,11 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.DeviceServiceNotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -318,7 +304,6 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	// Get the provision watchers
 	res, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
-		// TODO Custom Log
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -354,7 +339,6 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 
 	res, err := dbClient.GetProvisionWatchersByIdentifier(k, v)
 	if err != nil {
-		// TODO Custom Log
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -383,11 +367,9 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the name exists
 	if pw.Name == "" {
-		// TODO Custom Error
-		err = errors.New("No name provided for new provision watcher")
 		HttpErrorHandler.Handle(
 			w,
-			err,
+			errors.New("No name provided for new provision watcher"),
 			[]errorConcept.ErrorConceptType{},
 			DefaultErrorConcept.Conflict)
 		return
@@ -400,14 +382,13 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		profile, err = dbClient.GetDeviceProfileById(pw.Profile.Id)
 	}
 	if pw.Profile.Id == "" || err != nil {
-		// TODO Custom Error
 		// Try by name
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{
-					ProvisionWatcherErrorConcept.DeviceServiceNotFound,
+				[]errorConcept.ExplicitErrorConceptType{
+					ProvisionWatcherErrorConcept.DeviceProfileNotFound_Conflict,
 				},
 				DefaultErrorConcept.ServiceUnavailable)
 			return
@@ -422,14 +403,13 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		service, err = dbClient.GetDeviceServiceById(pw.Service.Id)
 	}
 	if pw.Service.Id == "" || err != nil {
-		// TODO Custom Error
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{
-					ProvisionWatcherErrorConcept.DeviceServiceNotFound,
+				[]errorConcept.ExplicitErrorConceptType{
+					ProvisionWatcherErrorConcept.DeviceServiceNotFound_Conflict,
 				},
 				DefaultErrorConcept.ServiceUnavailable)
 			return
@@ -439,12 +419,11 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	id, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotUnique,
+			[]errorConcept.ExplicitErrorConceptType{
+				ProvisionWatcherErrorConcept.NotUnique,
 			},
 			DefaultErrorConcept.ServiceUnavailable)
 		return
@@ -480,14 +459,13 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			// TODO Custom Error
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{
-					DatabaseErrorConcept.NotFound,
+				[]errorConcept.ExplicitErrorConceptType{
+					ProvisionWatcherErrorConcept.NotFoundByName,
 				},
-				DefaultErrorConcept.ServiceUnavailable)
+				ProvisionWatcherErrorConcept.ServiceUnavailable)
 			return
 		}
 	}
@@ -498,7 +476,6 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := dbClient.UpdateProvisionWatcher(to); err != nil {
-		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
 			err,
@@ -528,12 +505,11 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 		// Check that the name is unique
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
-			// TODO Custom Error
 			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{
+				[]errorConcept.ExplicitErrorConceptType{
 					errorConcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),
 				},
 				DefaultErrorConcept.ServiceUnavailable)

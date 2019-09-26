@@ -9,28 +9,8 @@ import (
 
 // DeviceReportErrorConcept represents the accessor for the device-report-specific error concepts
 type DeviceReportErrorConcept struct {
-	LimitExceeded deviceReportLimitExceeded
-	NotFound      deviceReportNotUnique
-	NotUnique     deviceReportNotUnique
-}
-
-// deviceReportLimitExceeded implements ExplicitErrorConceptType
-type deviceReportLimitExceeded struct{}
-
-func (r deviceReportLimitExceeded) httpErrorCode() int {
-	return http.StatusRequestEntityTooLarge
-}
-
-func (r deviceReportLimitExceeded) httpError(err error) error {
-	return errors.New("Max limit exceeded")
-}
-
-func (r deviceReportLimitExceeded) isA(err error) bool {
-	panic("isA should not be invoked since it is a default error concept")
-}
-
-func (r deviceReportLimitExceeded) logMessage(err error) string {
-	return err.Error()
+	NotFound  deviceReportNotUnique
+	NotUnique deviceReportNotUnique
 }
 
 // deviceReportDeviceNotFound implements ExplicitErrorConceptType
