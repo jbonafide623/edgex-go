@@ -75,7 +75,7 @@ func restAddDeviceProfile(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorConcept.ErrorConceptType{},
-				errorConcept.StatusConflictErrorConcept{})
+				DefaultErrorConcept.Conflict)
 			return
 		}
 
@@ -256,11 +256,12 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(data) == 0 {
+		// TODO Custom Error
 		HttpErrorHandler.Handle(
 			w,
 			errors.NewErrEmptyFile("YAML"),
 			[]errorConcept.ErrorConceptType{},
-			errorConcept.StatusBadRequestErrorConcept{})
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
@@ -272,7 +273,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 			w,
 			err,
 			[]errorConcept.ErrorConceptType{},
-			errorConcept.StatusInternalServerErrorConcept{})
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 

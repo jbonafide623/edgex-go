@@ -28,14 +28,23 @@ import (
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	res, err := dbClient.GetAllDeviceReports()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
 	// Check max limit
 	if len(res) > Configuration.Service.MaxResultCount {
+		// TODO Custom Error
 		err = errors.New("Max limit exceeded")
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusRequestEntityTooLargeErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.RequestEntityTooLarge)
 		return
 	}
 
@@ -50,13 +59,24 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var dr models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&dr); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Check if the device exists
 	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -64,7 +84,14 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	var err error
 	dr.Id, err = dbClient.AddDeviceReport(dr)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotUniqueErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotUnique,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -81,7 +108,11 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.DeviceReport
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
@@ -92,7 +123,13 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 		// Try by name
 		to, err = dbClient.GetDeviceReportByName(from.Name)
 		if err != nil {
-			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+			HttpErrorHandler.Handle(
+				w,
+				err,
+				[]errorConcept.ErrorConceptType{
+					DatabaseErrorConcept.NotFound,
+				},
+				DefaultErrorConcept.InternalServerError)
 			return
 		}
 	}
@@ -103,7 +140,11 @@ func restUpdateDeviceReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := dbClient.UpdateDeviceReport(to); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -144,7 +185,14 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 // Validate that the device exists
 func validateDevice(d string, w http.ResponseWriter) error {
 	if _, err := dbClient.GetDeviceByName(d); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.ServiceUnavailable)
 		return err
 	}
 
@@ -156,7 +204,13 @@ func restGetReportById(w http.ResponseWriter, r *http.Request) {
 	var did string = vars[ID]
 	res, err := dbClient.GetDeviceReportById(did)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -168,13 +222,23 @@ func restGetReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	res, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -188,14 +252,22 @@ func restGetValueDescriptorsForDeviceName(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Get all the associated device reports
 	reports, err := dbClient.GetDeviceReportByDeviceName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -213,13 +285,21 @@ func restGetDeviceReportByDeviceName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[DEVICENAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	res, err := dbClient.GetDeviceReportByDeviceName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -234,7 +314,13 @@ func restDeleteReportById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportById(id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -251,14 +337,24 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Check if the device report exists
 	dr, err := dbClient.GetDeviceReportByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -273,7 +369,11 @@ func restDeleteReportByName(w http.ResponseWriter, r *http.Request) {
 
 func deleteDeviceReport(dr models.DeviceReport, w http.ResponseWriter) error {
 	if err := dbClient.DeleteDeviceReportById(dr.Id); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return err
 	}
 
