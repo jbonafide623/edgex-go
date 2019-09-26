@@ -18,7 +18,6 @@ type DeviceProfileErrorConcept struct {
 	ContractInvalid            deviceProfileContractInvalid
 	EmptyName                  deviceProfileEmptyName
 	ContractInvalid_BadRequest deviceProfileContractInvalid_BadRequest
-	InternalServerError        deviceProfileInternalServerError
 }
 
 // deviceProfileDuplicateName implements ExplicitErrorConceptType
@@ -125,23 +124,4 @@ func (r deviceProfileContractInvalid_BadRequest) httpErrorCode() int {
 func (r deviceProfileContractInvalid_BadRequest) isA(err error) bool {
 	_, ok := err.(models.ErrContractInvalid)
 	return ok
-}
-
-// deviceProfileInternalServerError implements ExplicitErrorConceptType
-type deviceProfileInternalServerError struct{}
-
-func (r deviceProfileInternalServerError) httpErrorCode() int {
-	return http.StatusInternalServerError
-}
-
-func (r deviceProfileInternalServerError) httpError(err error) error {
-	return err
-}
-
-func (r deviceProfileInternalServerError) isA(err error) bool {
-	panic("isA should not be invoked, this is a default error concept used only as a fallback")
-}
-
-func (r deviceProfileInternalServerError) logMessage(err error) string {
-	return err.Error()
 }

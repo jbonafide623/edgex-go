@@ -15,7 +15,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -24,6 +23,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/gorilla/mux"
 )
+
+// Global variables
+var DeviceReportErrorConcept errorConcept.DeviceReportErrorConcept
 
 func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 	res, err := dbClient.GetAllDeviceReports()
@@ -38,13 +40,11 @@ func restGetAllDeviceReports(w http.ResponseWriter, _ *http.Request) {
 
 	// Check max limit
 	if len(res) > Configuration.Service.MaxResultCount {
-		// TODO Custom Error
-		err = errors.New("Max limit exceeded")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.RequestEntityTooLarge)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceReportErrorConcept.LimitExceeded)
 		return
 	}
 
@@ -69,12 +69,11 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the device exists
 	if _, err := dbClient.GetDeviceByName(dr.Device); err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceReportErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -84,12 +83,11 @@ func restAddDeviceReport(w http.ResponseWriter, r *http.Request) {
 	var err error
 	dr.Id, err = dbClient.AddDeviceReport(dr)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotUnique,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceReportErrorConcept.NotUnique,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -185,12 +183,11 @@ func updateDeviceReportFields(from models.DeviceReport, to *models.DeviceReport,
 // Validate that the device exists
 func validateDevice(d string, w http.ResponseWriter) error {
 	if _, err := dbClient.GetDeviceByName(d); err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceReportErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.ServiceUnavailable)
 		return err

@@ -237,7 +237,7 @@ func restAddProfileByYaml(w http.ResponseWriter, r *http.Request) {
 			[]errorConcept.ExplicitErrorConceptType{
 				DeviceProfileErrorConcept.MissingFile,
 			},
-			DeviceProfileErrorConcept.InternalServerError)
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
