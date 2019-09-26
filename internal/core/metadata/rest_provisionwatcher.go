@@ -25,17 +25,29 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Global variables
+var ProvisionWatcherErrorConcept errorConcept.ProvisionWatcherErrorConcept
+
 func restGetProvisionWatchers(w http.ResponseWriter, _ *http.Request) {
 	res, err := dbClient.GetAllProvisionWatchers()
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
 	// Check the length
 	if len(res) > Configuration.Service.MaxResultCount {
+		// TODO Custom Error
 		err := errors.New("Max limit exceeded")
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusRequestEntityTooLargeErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.RequestEntityTooLarge)
 		return
 	}
 
@@ -50,13 +62,23 @@ func restDeleteProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.NotFound)
 		return
 	}
 
 	err = deleteProvisionWatcher(pw, w)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.NotFound)
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -67,14 +89,25 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -90,7 +123,11 @@ func restDeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 // Delete the provision watcher
 func deleteProvisionWatcher(pw models.ProvisionWatcher, w http.ResponseWriter) error {
 	if err := dbClient.DeleteProvisionWatcherById(pw.Id); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return err
 	}
 
@@ -107,7 +144,14 @@ func restGetProvisionWatcherById(w http.ResponseWriter, r *http.Request) {
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -119,13 +163,24 @@ func restGetProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -139,13 +194,23 @@ func restGetProvisionWatchersByProfileId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device profile exists
 	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.NotFound)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(pid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -157,20 +222,36 @@ func restGetProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	pn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByProfileId(dp.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Log
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -184,13 +265,23 @@ func restGetProvisionWatchersByServiceId(w http.ResponseWriter, r *http.Request)
 
 	// Check if the device service exists
 	if _, err := dbClient.GetDeviceServiceById(sid); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.NotFound)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByServiceId(sid)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -202,21 +293,37 @@ func restGetProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	sn, err := url.QueryUnescape(vars[NAME])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotFound,
+			},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
 	// Get the provision watchers
 	res, err := dbClient.GetProvisionWatchersByServiceId(ds.Id)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusNotFoundErrorConcept{})
+		// TODO Custom Log
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.NotFound)
 		return
 	}
 
@@ -228,18 +335,31 @@ func restGetProvisionWatchersByIdentifier(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	k, err := url.QueryUnescape(vars[KEY])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 	v, err := url.QueryUnescape(vars[VALUE])
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusBadRequestErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.BadRequest)
 		return
 	}
 
 	res, err := dbClient.GetProvisionWatchersByIdentifier(k, v)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusInternalServerErrorConcept{})
+		// TODO Custom Log
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.InternalServerError)
 		return
 	}
 
@@ -253,14 +373,23 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if err = json.NewDecoder(r.Body).Decode(&pw); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
 	// Check if the name exists
 	if pw.Name == "" {
+		// TODO Custom Error
 		err = errors.New("No name provided for new provision watcher")
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusConflictErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.Conflict)
 		return
 	}
 
@@ -271,9 +400,16 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		profile, err = dbClient.GetDeviceProfileById(pw.Profile.Id)
 	}
 	if pw.Profile.Id == "" || err != nil {
+		// TODO Custom Error
 		// Try by name
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(
+				w,
+				err,
+				[]errorConcept.ErrorConceptType{
+					ProvisionWatcherErrorConcept.DeviceServiceNotFound,
+				},
+				DefaultErrorConcept.ServiceUnavailable)
 			return
 		}
 	}
@@ -286,9 +422,16 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 		service, err = dbClient.GetDeviceServiceById(pw.Service.Id)
 	}
 	if pw.Service.Id == "" || err != nil {
+		// TODO Custom Error
 		// Try by name
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDeviceServiceNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(
+				w,
+				err,
+				[]errorConcept.ErrorConceptType{
+					ProvisionWatcherErrorConcept.DeviceServiceNotFound,
+				},
+				DefaultErrorConcept.ServiceUnavailable)
 			return
 		}
 	}
@@ -296,7 +439,14 @@ func restAddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 
 	id, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotUniqueErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{
+				DatabaseErrorConcept.NotUnique,
+			},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
@@ -316,7 +466,11 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var from models.ProvisionWatcher
 	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
@@ -326,7 +480,14 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Try by name
 		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.DatabaseNotFoundErrorConcept{}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+			// TODO Custom Error
+			HttpErrorHandler.Handle(
+				w,
+				err,
+				[]errorConcept.ErrorConceptType{
+					errorConcept.DatabaseNotFoundErrorConcept{},
+				},
+				DefaultErrorConcept.ServiceUnavailable)
 			return
 		}
 	}
@@ -337,7 +498,12 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := dbClient.UpdateProvisionWatcher(to); err != nil {
-		HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{}, errorConcept.StatusServiceUnavailableErrorConcept{})
+		// TODO Custom Error
+		HttpErrorHandler.Handle(
+			w,
+			err,
+			[]errorConcept.ErrorConceptType{},
+			DefaultErrorConcept.ServiceUnavailable)
 		return
 	}
 
@@ -362,8 +528,15 @@ func updateProvisionWatcherFields(from models.ProvisionWatcher, to *models.Provi
 		// Check that the name is unique
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
+			// TODO Custom Error
 			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			HttpErrorHandler.Handle(w, err, []errorConcept.ErrorConceptType{errorConcept.ProvisionWatcherDuplicateErrorConcept{CurrentPWId: checkPW.Id, UpdatedPWId: to.Id}}, errorConcept.StatusServiceUnavailableErrorConcept{})
+			HttpErrorHandler.Handle(
+				w,
+				err,
+				[]errorConcept.ErrorConceptType{
+					errorConcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),
+				},
+				DefaultErrorConcept.ServiceUnavailable)
 		}
 		to.Name = from.Name
 	}
