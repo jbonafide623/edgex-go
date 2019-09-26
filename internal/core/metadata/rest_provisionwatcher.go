@@ -485,7 +485,7 @@ func restUpdateProvisionWatcher(w http.ResponseWriter, r *http.Request) {
 				w,
 				err,
 				[]errorConcept.ErrorConceptType{
-					errorConcept.DatabaseNotFoundErrorConcept{},
+					DatabaseErrorConcept.NotFound,
 				},
 				DefaultErrorConcept.ServiceUnavailable)
 			return
