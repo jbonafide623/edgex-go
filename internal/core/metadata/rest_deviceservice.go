@@ -32,6 +32,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Global variables
+var DeviceServiceErrorConcept errorConcept.DeviceServiceErrorConcept
+
 func restGetAllDeviceServices(w http.ResponseWriter, _ *http.Request) {
 	op := device_service.NewDeviceServiceLoadAll(Configuration.Service, dbClient, LoggingClient)
 	services, err := op.Execute()
@@ -64,13 +67,11 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 	// Addressable Check
 	// No ID or Name given for addressable
 	if ds.Addressable.Id == "" && ds.Addressable.Name == "" {
-		// TODO Custom Error
-		err = errors.New("Must provide an Addressable for Device Service")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceServiceErrorConcept.EmptyAddressable)
 		return
 	}
 
@@ -80,12 +81,11 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 		addressable, err = dbClient.GetAddressableById(ds.Addressable.Id)
 	}
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -94,12 +94,11 @@ func restAddDeviceService(w http.ResponseWriter, r *http.Request) {
 
 	// Add the device service
 	if ds.Id, err = dbClient.AddDeviceService(ds); err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotUnique,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotUnique,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -131,12 +130,11 @@ func restUpdateDeviceService(w http.ResponseWriter, r *http.Request) {
 	if from.Id == "" || err != nil {
 		// Try by Name
 		if to, err = dbClient.GetDeviceServiceByName(from.Name); err != nil {
-			// TODO Custom Error
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{},
-				DefaultErrorConcept.NotFound)
+				[]errorConcept.ExplicitErrorConceptType{},
+				DeviceServiceErrorConcept.NotFound)
 			return
 		}
 	}
@@ -196,11 +194,10 @@ func updateDeviceServiceFields(from models.DeviceService, to *models.DeviceServi
 		// Check if the new name is unique
 		checkDS, err := dbClient.GetDeviceServiceByName(from.Name)
 		if err != nil {
-			// TODO Custom Error
-			HttpErrorHandler.Handle(
+			HttpErrorHandler.ExplicitHandle(
 				w,
 				err,
-				[]errorConcept.ErrorConceptType{
+				[]errorConcept.ExplicitErrorConceptType{
 					errorConcept.NewDeviceServiceDuplicate(checkDS.Id, to.Id),
 				},
 				DefaultErrorConcept.ServiceUnavailable)
@@ -327,12 +324,11 @@ func restDeleteServiceById(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists and get it
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -361,12 +357,11 @@ func restDeleteServiceByName(w http.ResponseWriter, r *http.Request) {
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -449,12 +444,11 @@ func restUpdateServiceLastConnectedById(w http.ResponseWriter, r *http.Request) 
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -494,12 +488,11 @@ func restUpdateServiceLastConnectedByName(w http.ResponseWriter, r *http.Request
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -560,13 +553,12 @@ func restUpdateServiceOpStateById(w http.ResponseWriter, r *http.Request) {
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)
 	if !f {
-		// TODO Custom Error
 		err := errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceServiceErrorConcept.InvalidState)
 		return
 	}
 
@@ -602,13 +594,12 @@ func restUpdateServiceOpStateByName(w http.ResponseWriter, r *http.Request) {
 	// Check the OpState
 	newOs, f := models.GetOperatingState(os)
 	if !f {
-		// TODO Custom Error
 		err = errors.New("Invalid State: " + os + " Must be 'ENABLED' or 'DISABLED'")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceServiceErrorConcept.InvalidState)
 		return
 	}
 
@@ -636,13 +627,12 @@ func restUpdateServiceAdminStateById(w http.ResponseWriter, r *http.Request) {
 	// Check the admin state
 	newAs, f := models.GetAdminState(as)
 	if !f {
-		// TODO Custom Error
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceServiceErrorConcept.InvalidState)
 		return
 	}
 
@@ -678,13 +668,12 @@ func restUpdateServiceAdminStateByName(w http.ResponseWriter, r *http.Request) {
 	// Check the admin state
 	newAs, f := models.GetAdminState(as)
 	if !f {
-		// TODO Custom Error
 		err := errors.New("Invalid state: " + as + " Must be 'LOCKED' or 'UNLOCKED'")
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{},
-			DefaultErrorConcept.BadRequest)
+			[]errorConcept.ExplicitErrorConceptType{},
+			DeviceServiceErrorConcept.InvalidState)
 		return
 	}
 
@@ -721,12 +710,11 @@ func restUpdateServiceLastReportedById(w http.ResponseWriter, r *http.Request) {
 	// Check if the devicde service exists
 	ds, err := dbClient.GetDeviceServiceById(id)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
@@ -766,12 +754,11 @@ func restUpdateServiceLastReportedByName(w http.ResponseWriter, r *http.Request)
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(n)
 	if err != nil {
-		// TODO Custom Error
-		HttpErrorHandler.Handle(
+		HttpErrorHandler.ExplicitHandle(
 			w,
 			err,
-			[]errorConcept.ErrorConceptType{
-				DatabaseErrorConcept.NotFound,
+			[]errorConcept.ExplicitErrorConceptType{
+				DeviceServiceErrorConcept.NotFound,
 			},
 			DefaultErrorConcept.InternalServerError)
 		return
