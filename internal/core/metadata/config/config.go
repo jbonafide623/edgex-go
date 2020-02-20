@@ -28,6 +28,7 @@ type ConfigurationStruct struct {
 	Databases     config.DatabaseInfo
 	Logging       bootstrapConfig.LoggingInfo
 	Notifications config.NotificationInfo
+	MessageQueue  config.MessageQueueInfo
 	Registry      bootstrapConfig.RegistryInfo
 	Service       bootstrapConfig.ServiceInfo
 	SecretStore   bootstrapConfig.SecretStoreInfo

@@ -16,10 +16,13 @@ package metadata
 
 import (
 	"context"
+	"fmt"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	commonContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
@@ -51,9 +54,25 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	configuration := container.ConfigurationFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
+	msgClient, err := messaging.NewMessageClient(
+		msgTypes.MessageBusConfig{
+			PublishHost:   msgTypes.HostInfo{
+				Host:     configuration.MessageQueue.Host,
+				Port:     configuration.MessageQueue.Port,
+				Protocol: configuration.MessageQueue.Protocol,
+			},
+			Type:          configuration.MessageQueue.Type,
+			Optional:      configuration.MessageQueue.Optional,
+		})
+
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	if err != nil {
+		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+	}
+
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
-		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+		commonContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(bootstrapContainer.LoggingClientFrom(get))
 		},
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
@@ -81,6 +100,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
 				),
 			)
+		},
+		commonContainer.MessagingClientName: func(get di.Get) interface{} {
+			return msgClient
 		},
 	})
 

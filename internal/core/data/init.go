@@ -20,7 +20,7 @@ import (
 	"sync"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	commonContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
@@ -104,13 +104,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
 			return mdc
 		},
-		dataContainer.MessagingClientName: func(get di.Get) interface{} {
+		commonContainer.MessagingClientName: func(get di.Get) interface{} {
 			return msgClient
 		},
 		dataContainer.EventsChannelName: func(get di.Get) interface{} {
 			return chEvents
 		},
-		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+		commonContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(lc)
 		},
 	})

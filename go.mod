@@ -16,6 +16,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/mux v1.7.1
+	github.com/hashicorp/go-uuid v1.0.1
 	github.com/imdario/mergo v0.3.6
 	github.com/magiconair/properties v1.8.0
 	github.com/pelletier/go-toml v1.2.0

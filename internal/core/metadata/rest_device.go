@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -73,6 +74,7 @@ func restAddNewDevice(
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	nc notifications.NotificationsClient,
+	mc messaging.MessageClient,
 	configuration *config.ConfigurationStruct) {
 
 	defer r.Body.Close()
@@ -117,6 +119,12 @@ func restAddNewDevice(
 			errorconcept.Default.InternalServerError)
 		return
 	}
+
+	publisher := device.NewMessagePublisher(
+		[]device.Command{
+			device.NewEventMessagePublisher(mc, d.Name, configuration.MessageQueue.Topic, ctx, lc),
+		})
+	go publisher.Execute()
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(newId))
