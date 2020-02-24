@@ -1044,6 +1044,44 @@ func restGetDeviceByName(
 	_ = json.NewEncoder(w).Encode(res)
 }
 
+func restBlacklistDevice(w http.ResponseWriter, r *http.Request, kc device.KuiperClient) {
+	var rule device.RuleRequest
+	err := json.NewDecoder(r.Body).Decode(&rule)
+	if err != nil {
+		// TODO handle error
+	}
+
+	t, err := kc.AddRule(rule)
+	fmt.Printf("%v\n", t)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+
+	b, err := json.Marshal(t)
+	w.Write(b)
+}
+
+func restRemoveBlacklistedDevice(w http.ResponseWriter, r *http.Request, kc device.KuiperClient) {
+	vars := mux.Vars(r)
+	var ruleName = vars[NAME]
+
+	err := kc.DeleteRule(ruleName)
+	if err != nil {
+		fmt.Printf("error: %s", err.Error())
+		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("true"))
+}
+
 // Notify the associated device service for the device
 func notifyDeviceAssociates(
 	d models.Device,

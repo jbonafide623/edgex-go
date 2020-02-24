@@ -109,6 +109,14 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
+	// TODO Move authentication header for kuiper client to middleware function
+	b.HandleFunc("/" + DEVICE + "/rule", func(w http.ResponseWriter, r *http.Request) {
+		restBlacklistDevice(w, r, metadataContainer.KuiperClientFrom(dic.Get))
+	}).Methods(http.MethodPost)
+	b.HandleFunc("/" + DEVICE + "/rule/{"+NAME+"}", func(w http.ResponseWriter, r *http.Request) {
+		restRemoveBlacklistedDevice(w, r, metadataContainer.KuiperClientFrom(dic.Get))
+	})
+
 	d := b.PathPrefix("/" + DEVICE).Subrouter()
 
 	d.HandleFunc(
@@ -329,7 +337,6 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				metadataContainer.NotificationsClientFrom(dic.Get),
 				metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPut)
-
 }
 
 func loadDeviceProfileRoutes(b *mux.Router, dic *di.Container) {

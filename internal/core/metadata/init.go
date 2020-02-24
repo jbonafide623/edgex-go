@@ -17,6 +17,7 @@ package metadata
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	"sync"
@@ -103,6 +104,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 		commonContainer.MessagingClientName: func(get di.Get) interface{} {
 			return msgClient
+		},
+		container.KuiperClientName: func(get di.Get) interface{} {
+			return device.NewKuiperClient(configuration.Kuiper)
 		},
 	})
 

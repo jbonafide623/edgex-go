@@ -16,6 +16,7 @@ package config
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
@@ -26,6 +27,7 @@ type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Clients       map[string]bootstrapConfig.ClientInfo
 	Databases     config.DatabaseInfo
+	Kuiper 		  KuiperInfo
 	Logging       bootstrapConfig.LoggingInfo
 	Notifications config.NotificationInfo
 	MessageQueue  config.MessageQueueInfo
@@ -38,6 +40,12 @@ type ConfigurationStruct struct {
 type WritableInfo struct {
 	LogLevel                        string
 	EnableValueDescriptorManagement bool
+}
+
+// TODO Docs?
+type KuiperInfo struct {
+	types.HostInfo
+	bootstrapConfig.Credentials
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
