@@ -26,6 +26,7 @@ type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Clients       map[string]bootstrapConfig.ClientInfo
 	Databases     config.DatabaseInfo
+	Kuiper        KuiperInfo
 	Logging       bootstrapConfig.LoggingInfo
 	MessageQueues map[string]config.MessageQueueInfo
 	Notifications config.NotificationInfo

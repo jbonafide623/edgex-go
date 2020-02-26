@@ -47,6 +47,11 @@ File = './logs/edgex-core-metadata.log'
   Timeout = 5000
   Type = 'mongodb'
 
+[Kuiper]
+Path = "/home/work/emqx/kuiper-0.1-linux-x86_64"
+Cmd = "bin/cli"
+
+
 [MessageQueues]
   [MessageQueues.NewDevice]
   Protocol = 'tcp'
@@ -58,10 +63,9 @@ File = './logs/edgex-core-metadata.log'
     Qos = '1'
     Username = 'admin'
     Password = 'admin'
-    KeepAlive = '200'
+    KeepAlive = '500'
     Retained = 'true'
     Topic = 'new_device'
-
 
 [Notifications]
 PostDeviceChanges = true

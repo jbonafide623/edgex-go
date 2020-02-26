@@ -112,13 +112,13 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 	b.HandleFunc(
 		"/" + DEVICE + "/blacklist/{" + NAME + "}",
 		func(w http.ResponseWriter, r *http.Request) {
-			restAddDeviceToBlacklist(w, r)
+			restAddDeviceToBlacklist(w, r, metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)
 
 	b.HandleFunc(
 		"/" + DEVICE + "/blacklist/{" + NAME + "}",
 		func(w http.ResponseWriter, r *http.Request) {
-			restRemoveDeviceFromBlacklist(w, r)
+			restRemoveDeviceFromBlacklist(w, r, metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	d := b.PathPrefix("/" + DEVICE).Subrouter()

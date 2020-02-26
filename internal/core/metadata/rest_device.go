@@ -552,6 +552,9 @@ func restDeleteDeviceByName(
 
 	vars := mux.Vars(r)
 	n, err := url.QueryUnescape(vars[NAME])
+
+	lc.Info("Deleting device " + n)
+
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
@@ -1047,11 +1050,12 @@ func restGetDeviceByName(
 	_ = json.NewEncoder(w).Encode(res)
 }
 
-func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request) {
+func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request, c *config.ConfigurationStruct) {
 	deviceName := mux.Vars(r)[NAME]
-	path, _ := filepath.Abs("/home/work/emqx/kuiper-0.1-linux-x86_64")
+	coreMetaDataUrl := fmt.Sprintf("%s://%s:%d", c.Service.Protocol, c.Service.Host, c.Service.Port)
+	path, _ := filepath.Abs(c.Kuiper.Path)
 	encodedDeviceName := base64.StdEncoding.EncodeToString([]byte(deviceName))
-	cmd := exec.Command("bin/cli", "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"`+ encodedDeviceName +`\"", "actions": [{"mqtt": {"server": "tcp://127.0.0.1:1883", "topic": "blacklist_device"}}]}`)
+	cmd := exec.Command(c.Kuiper.Cmd, "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"`+ encodedDeviceName +`\"", "actions": [{"rest": {"url": "`+ coreMetaDataUrl +`/api/v1/device/name/`+deviceName+`", "method": "delete", "sendSingle": true}}]}`)
 	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {
@@ -1063,10 +1067,10 @@ func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("success"))
 }
 
-func restRemoveDeviceFromBlacklist(w http.ResponseWriter, r *http.Request) {
+func restRemoveDeviceFromBlacklist(w http.ResponseWriter, r *http.Request, c *config.ConfigurationStruct) {
 	deviceName := mux.Vars(r)[NAME]
-	path, _ := filepath.Abs("/home/work/emqx/kuiper-0.1-linux-x86_64")
-	cmd := exec.Command("bin/cli", "drop", "rule", deviceName)
+	path, _ := filepath.Abs(c.Kuiper.Path)
+	cmd := exec.Command(c.Kuiper.Cmd, "drop", "rule", deviceName)
 	cmd.Dir = path
 	_, err := cmd.Output()
 	if err != nil {

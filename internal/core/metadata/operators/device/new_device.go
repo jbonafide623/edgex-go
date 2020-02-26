@@ -75,6 +75,10 @@ func (m EventMessagePublisher) execute() {
         return
     }
     m.lc.Debug("Successfully published message")
+    err = m.client.Disconnect()
+    if err != nil {
+        m.lc.Error("Error disconnecting " + err.Error())
+    }
 }
 
 //type deviceMessagePayload struct {
