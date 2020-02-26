@@ -17,8 +17,10 @@ package metadata
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -74,6 +76,7 @@ func restAddNewDevice(
 	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
+	mc messaging.MessageClient,
 	nc notifications.NotificationsClient,
 	configuration *config.ConfigurationStruct) {
 
@@ -119,6 +122,12 @@ func restAddNewDevice(
 			errorconcept.Default.InternalServerError)
 		return
 	}
+
+	publisher := device.NewMessagePublisher(
+		[]device.Command{
+			device.NewEventMessagePublisher(mc, d.Name, configuration.MessageQueues["NewDevice"].Topic, ctx, lc),
+		})
+	go publisher.Execute()
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(newId))
@@ -1041,7 +1050,8 @@ func restGetDeviceByName(
 func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request) {
 	deviceName := mux.Vars(r)[NAME]
 	path, _ := filepath.Abs("/home/work/emqx/kuiper-0.1-linux-x86_64")
-	cmd := exec.Command("bin/cli", "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"Device1\"", "actions": [{"mqtt": {"server": "tcp://127.0.0.1:1883", "topic": "blacklist_device"}}]}`)
+	encodedDeviceName := base64.StdEncoding.EncodeToString([]byte(deviceName))
+	cmd := exec.Command("bin/cli", "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"`+ encodedDeviceName +`\"", "actions": [{"mqtt": {"server": "tcp://127.0.0.1:1883", "topic": "blacklist_device"}}]}`)
 	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {

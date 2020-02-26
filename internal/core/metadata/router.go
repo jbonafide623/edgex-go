@@ -83,6 +83,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.MessagingClientFrom(dic.Get),
 				metadataContainer.NotificationsClientFrom(dic.Get),
 				metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)

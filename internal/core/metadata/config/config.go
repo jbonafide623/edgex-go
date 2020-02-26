@@ -27,6 +27,7 @@ type ConfigurationStruct struct {
 	Clients       map[string]bootstrapConfig.ClientInfo
 	Databases     config.DatabaseInfo
 	Logging       bootstrapConfig.LoggingInfo
+	MessageQueues map[string]config.MessageQueueInfo
 	Notifications config.NotificationInfo
 	Registry      bootstrapConfig.RegistryInfo
 	Service       bootstrapConfig.ServiceInfo

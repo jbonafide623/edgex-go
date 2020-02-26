@@ -1,5 +1,5 @@
 [Writable]
-LogLevel = 'INFO'
+LogLevel = 'DEBUG'
 EnableValueDescriptorManagement = false
 
 [Service]
@@ -46,6 +46,22 @@ File = './logs/edgex-core-metadata.log'
   Username = ''
   Timeout = 5000
   Type = 'mongodb'
+
+[MessageQueues]
+  [MessageQueues.NewDevice]
+  Protocol = 'tcp'
+  Host = '127.0.0.1'
+  Port = 1883
+  Type = 'mqtt'
+  Topic = 'new_device'
+    [MessageQueues.NewDevice.Optional]
+    Qos = '1'
+    Username = 'admin'
+    Password = 'admin'
+    KeepAlive = '200'
+    Retained = 'true'
+    Topic = 'new_device'
+
 
 [Notifications]
 PostDeviceChanges = true

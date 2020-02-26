@@ -16,6 +16,8 @@ package metadata
 
 import (
 	"context"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+	"github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -51,6 +53,17 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	configuration := container.ConfigurationFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
+	msgClient,_ := messaging.NewMessageClient(
+		types.MessageBusConfig{
+			PublishHost:   types.HostInfo{
+				Host:     configuration.MessageQueues["NewDevice"].Host,
+				Port:     configuration.MessageQueues["NewDevice"].Port,
+				Protocol: configuration.MessageQueues["NewDevice"].Protocol,
+			},
+			Type:          configuration.MessageQueues["NewDevice"].Type,
+			Optional:      configuration.MessageQueues["NewDevice"].Optional,
+		})
+
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
@@ -81,6 +94,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
 				),
 			)
+		},
+		container.MessagingClientName: func(get di.Get) interface{} {
+			return msgClient
 		},
 	})
 
