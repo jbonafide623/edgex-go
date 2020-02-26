@@ -22,6 +22,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -1034,6 +1036,36 @@ func restGetDeviceByName(
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	_ = json.NewEncoder(w).Encode(res)
+}
+
+func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request) {
+	deviceName := mux.Vars(r)[NAME]
+	path, _ := filepath.Abs("/home/work/emqx/kuiper-0.1-linux-x86_64")
+	cmd := exec.Command("bin/cli", "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"Device1\"", "actions": [{"mqtt": {"server": "tcp://127.0.0.1:1883", "topic": "blacklist_device"}}]}`)
+	cmd.Dir = path
+	err := cmd.Run()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.WriteHeader(200)
+	w.Write([]byte("success"))
+}
+
+func restRemoveDeviceFromBlacklist(w http.ResponseWriter, r *http.Request) {
+	deviceName := mux.Vars(r)[NAME]
+	path, _ := filepath.Abs("/home/work/emqx/kuiper-0.1-linux-x86_64")
+	cmd := exec.Command("bin/cli", "drop", "rule", deviceName)
+	cmd.Dir = path
+	_, err := cmd.Output()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.WriteHeader(200)
+	w.Write([]byte("success"))
 }
 
 // Notify the associated device service for the device
