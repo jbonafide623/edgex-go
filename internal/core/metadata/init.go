@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
+	container2 "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 	"sync"
@@ -55,21 +56,45 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	configuration := container.ConfigurationFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
-	msgClient, err := messaging.NewMessageClient(
+	nc, err := messaging.NewMessageClient(
 		msgTypes.MessageBusConfig{
 			PublishHost:   msgTypes.HostInfo{
-				Host:     configuration.MessageQueue.Host,
-				Port:     configuration.MessageQueue.Port,
-				Protocol: configuration.MessageQueue.Protocol,
+				Host:     configuration.MessageQueues["NewDevice"].Host,
+				Port:     configuration.MessageQueues["NewDevice"].Port,
+				Protocol: configuration.MessageQueues["NewDevice"].Protocol,
 			},
-			Type:          configuration.MessageQueue.Type,
-			Optional:      configuration.MessageQueue.Optional,
+			Type:          configuration.MessageQueues["NewDevice"].Type,
+			Optional:      configuration.MessageQueues["NewDevice"].Optional,
 		})
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	if err != nil {
 		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 	}
+
+	msgC := msgTypes.MessageBusConfig{
+		PublishHost:   msgTypes.HostInfo{
+			Host:     configuration.MessageQueues["BlacklistDevice"].Host,
+			Port:     configuration.MessageQueues["BlacklistDevice"].Port,
+			Protocol: configuration.MessageQueues["BlacklistDevice"].Protocol,
+		},
+		SubscribeHost:   msgTypes.HostInfo{
+			Host:     configuration.MessageQueues["BlacklistDevice"].Host,
+			Port:     configuration.MessageQueues["BlacklistDevice"].Port,
+			Protocol: configuration.MessageQueues["BlacklistDevice"].Protocol,
+		},
+		Type:          configuration.MessageQueues["BlacklistDevice"].Type,
+		Optional:      configuration.MessageQueues["BlacklistDevice"].Optional,
+	}
+	bc, err := messaging.NewMessageClient(msgC)
+
+
+	if err != nil {
+		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+	}
+
+	o := device.NewBlacklistDeviceObservable(bc)
+	device.NewUnregisterDeviceObserver(o, container2.DBClientFrom(dic.Get))
 
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
@@ -103,7 +128,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 			)
 		},
 		commonContainer.MessagingClientName: func(get di.Get) interface{} {
-			return msgClient
+			return nc
+		},
+		container.BlacklistMessagingClientName: func(get di.Get) interface{} {
+			return bc
 		},
 		container.KuiperClientName: func(get di.Get) interface{} {
 			return device.NewKuiperClient(configuration.Kuiper)

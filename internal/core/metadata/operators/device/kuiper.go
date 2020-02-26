@@ -23,8 +23,25 @@ func NewKuiperClient(info config.KuiperInfo) KuiperClient {
 }
 
 // TODO Clean up
-func (k *KuiperClient) AddRule(r RuleRequest) (string, error) {
-    b, _ := r.MarshalJSON()
+func (k *KuiperClient) AddRule(name string) (string, error) {
+    encoded := base64.StdEncoding.EncodeToString([]byte(name))
+    r := RuleRequest{
+        Name:        name,
+        For:         "message.publish",
+        RawSql:      "select * from \"new_device\" where payload.Payload = '" + encoded +"'",
+        Description: "",
+        Actions:     []RuleAction {
+            {
+                Name:   "republish",
+                Params: RepublishAction{
+                    TargetTopic: "blacklist_device",
+                    TargetQos:   -1,
+                    PayloadTmpl: "${payload}",
+                },
+            },
+        },
+    }
+    b,_ := json.Marshal(r)
     url := k.Info.Protocol + "://" + k.Info.Host + ":" + strconv.Itoa(k.Info.Port) + "/api/v4/rules"
     kr, err := http.NewRequest("POST", url, bytes.NewReader(b))
     if err != nil {
@@ -86,7 +103,17 @@ type RuleResponse struct {
 
 type RuleAction struct {
     Name    string  `json:"name"`
-    Params  struct{} `json:"params"`
+    Params  RepublishAction `json:"params"`
+}
+
+type RepublishAction struct {
+    TargetTopic  string  `json:"target_topic"`
+    TargetQos    int     `json:"target_qos"`
+    PayloadTmpl  string  `json:"payload_tmpl"`
+}
+
+type Rule struct {
+    Name string `json:"name"`
 }
 
 type RuleRequest struct {

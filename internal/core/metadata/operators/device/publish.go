@@ -43,7 +43,7 @@ func NewEventMessagePublisher(
 	ctx context.Context,
 	lc logger.LoggingClient) EventMessagePublisher {
 
-	payload := newDeviceMessagePayload(deviceName).toString()
+	//payload := newDeviceMessagePayload(deviceName).toString()
 	ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
 
 	uuid, err := uuid.GenerateUUID()
@@ -55,7 +55,7 @@ func NewEventMessagePublisher(
 
 	return EventMessagePublisher{
 		client,
-		types.NewMessageEnvelope(payload, ctx),
+		types.NewMessageEnvelope([]byte(deviceName), ctx),
 		topic,
 		lc,
 	}
@@ -71,6 +71,9 @@ func (m EventMessagePublisher) execute() {
 	}
 
 	m.lc.Debug(fmt.Sprintf("Publishing message: %s to topic: %s", m.message, m.topic))
+	//payload := string(m.message.Payload)
+	//payload = strings.Replace(payload, "\"", "\\\"", -1)
+	//m.message.Payload = []byte(base64.StdEncoding.EncodeToString(m.message.Payload))
 	err = m.client.Publish(m.message, m.topic)
 	if err != nil {
 		m.lc.Error(fmt.Sprintf("error publishing MQTT message: %s", err.Error()))
@@ -79,17 +82,17 @@ func (m EventMessagePublisher) execute() {
 	m.lc.Debug("Successfully published message")
 }
 
-type deviceMessagePayload struct {
+type DeviceMessagePayload struct {
 	Name string `json:"name"`
 }
 
-func newDeviceMessagePayload(name string)  deviceMessagePayload {
-	return deviceMessagePayload{
+func newDeviceMessagePayload(name string)  DeviceMessagePayload {
+	return DeviceMessagePayload{
 		Name: name,
 	}
 }
 
-func (n deviceMessagePayload) toString() []byte {
+func (n DeviceMessagePayload) toString() []byte {
 	b, err := json.Marshal(n)
 	if err != nil {
 		fmt.Errorf("error marshalling: %s", err.Error())

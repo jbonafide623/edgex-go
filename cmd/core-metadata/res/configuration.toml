@@ -61,19 +61,33 @@ Sender = 'core-metadata'
 Description = 'Metadata device notice'
 Label = 'metadata'
 
-[MessageQueue]
-Protocol = 'tcp'
-Host = '127.0.0.1'
-Port = 1883
-Type="mqtt"
-Topic="new_device"
-  [MessageQueue.Optional]
-  Qos = "0"
-  Username = "admin"
-  Password = "admin"
-  KeepAlive = "120"
-  Retained = "true"
-  Topic = 'new_device'
+[MessageQueues]
+  [MessageQueues.NewDevice]
+  Protocol = 'tcp'
+  Host = '127.0.0.1'
+  Port = 1883
+  Type="mqtt"
+  Topic="new_device"
+    [MessageQueues.NewDevice.Optional]
+    Qos = "1"
+    Username = "admin"
+    Password = "admin"
+    KeepAlive = "1000"
+    Retained = "true"
+    Topic = 'new_device'
+  [MessageQueues.BlacklistDevice]
+  Protocol = 'tcp'
+  Host = '127.0.0.1'
+  Port = 1883
+  Type = 'mqtt'
+  Topic = 'blacklist_device'
+    [MessageQueues.BlacklistDevice.Optional]
+    Qos = '1'
+    Username = 'admin'
+    Password = 'admin'
+    KeepAlive = '1000'
+    Retained = 'true'
+    Topic = 'blacklist_device'
 
 [SecretStore]
 Host = 'localhost'

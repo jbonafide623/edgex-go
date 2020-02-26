@@ -122,7 +122,12 @@ func restAddNewDevice(
 
 	publisher := device.NewMessagePublisher(
 		[]device.Command{
-			device.NewEventMessagePublisher(mc, d.Name, configuration.MessageQueue.Topic, ctx, lc),
+			device.NewEventMessagePublisher(
+				mc,
+				d.Name,
+				configuration.MessageQueues["NewDevice"].Topic,
+				ctx,
+				lc),
 		})
 	go publisher.Execute()
 
@@ -1045,13 +1050,13 @@ func restGetDeviceByName(
 }
 
 func restBlacklistDevice(w http.ResponseWriter, r *http.Request, kc device.KuiperClient) {
-	var rule device.RuleRequest
+	var rule device.Rule
 	err := json.NewDecoder(r.Body).Decode(&rule)
 	if err != nil {
 		// TODO handle error
 	}
 
-	t, err := kc.AddRule(rule)
+	t, err := kc.AddRule(rule.Name)
 	fmt.Printf("%v\n", t)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
