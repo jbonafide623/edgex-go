@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/edgexfoundry/go-mod-core-contracts/clients"
     "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+    "github.com/edgexfoundry/go-mod-core-contracts/models"
     "github.com/edgexfoundry/go-mod-messaging/messaging"
     "github.com/edgexfoundry/go-mod-messaging/pkg/types"
     "github.com/hashicorp/go-uuid"
@@ -48,12 +49,16 @@ func NewEventMessagePublisher(
     if err != nil {
         fmt.Errorf("error generating uuid: %s", err.Error())
     }
+
+
     ctx = context.WithValue(ctx, clients.CorrelationHeader, uuid)
 
+    n := models.NewDevice{Name:deviceName}
+    b,_ := n.MarshalJSON()
 
     return EventMessagePublisher{
         client,
-        types.NewMessageEnvelope([]byte(deviceName), ctx),
+        types.NewMessageEnvelope(b, ctx),
         topic,
         lc,
     }
@@ -80,22 +85,3 @@ func (m EventMessagePublisher) execute() {
         m.lc.Error("Error disconnecting " + err.Error())
     }
 }
-
-//type deviceMessagePayload struct {
-//    Name string `json:"name"`
-//}
-//
-//func newDeviceMessagePayload(name string)  deviceMessagePayload {
-//    return deviceMessagePayload{
-//        Name: name,
-//    }
-//}
-//
-//func (n deviceMessagePayload) toString() []byte {
-//    b, err := json.Marshal(n)
-//    if err != nil {
-//        fmt.Errorf("error marshalling: %s", err.Error())
-//    }
-//
-//    return b
-//}

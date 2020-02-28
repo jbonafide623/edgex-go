@@ -29,3 +29,7 @@ require (
 )
 
 go 1.13
+
+replace github.com/edgexfoundry/go-mod-core-contracts => /home/work/repos/go/src/github.com/edgexfoundry/go-mod-core-contracts
+
+replace github.com/edgexfoundry/go-mod-messaging => /home/work/repos/go/src/github.com/edgexfoundry/go-mod-messaging

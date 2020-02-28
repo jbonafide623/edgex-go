@@ -1052,10 +1052,12 @@ func restGetDeviceByName(
 
 func restAddDeviceToBlacklist(w http.ResponseWriter, r *http.Request, c *config.ConfigurationStruct) {
 	deviceName := mux.Vars(r)[NAME]
-	coreMetaDataUrl := fmt.Sprintf("%s://%s:%d", c.Service.Protocol, c.Service.Host, c.Service.Port)
 	path, _ := filepath.Abs(c.Kuiper.Path)
-	encodedDeviceName := base64.StdEncoding.EncodeToString([]byte(deviceName))
-	cmd := exec.Command(c.Kuiper.Cmd, "create", "rule", deviceName, `{"sql": "SELECT * from new_device WHERE payload = \"`+ encodedDeviceName +`\"", "actions": [{"rest": {"url": "`+ coreMetaDataUrl +`/api/v1/device/name/`+deviceName+`", "method": "delete", "sendSingle": true}}]}`)
+
+	n := models.NewDeviceOnboarded{Name:deviceName}
+	b,_ := n.MarshalJSON()
+	encodedDevice := base64.StdEncoding.EncodeToString(b)
+	cmd := exec.Command(c.Kuiper.Cmd, "create", "rule", deviceName, `{"sql": "SELECT contenttype as contentType, correlationid as correlationId, payload, checksum from new_device WHERE Payload = \"`+ encodedDevice +`\"", "actions": [{"mqtt": {"server": "tcp://127.0.0.1:1883", "topic": "blacklist_device", "qos": 1, "username": "admin", "password": "admin"}}]}`)
 	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {
