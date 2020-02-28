@@ -53,7 +53,7 @@ func NewEventMessagePublisher(
 
     ctx = context.WithValue(ctx, clients.CorrelationHeader, uuid)
 
-    n := models.NewDevice{Name:deviceName}
+    n := models.NewDeviceOnboarded{Name:deviceName}
     b,_ := n.MarshalJSON()
 
     return EventMessagePublisher{
