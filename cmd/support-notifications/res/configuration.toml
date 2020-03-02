@@ -40,11 +40,11 @@ File = './logs/edgex-support-notifications.log'
 
 [Smtp]
   Host = 'smtp.gmail.com'
-  Username = 'username@mail.example.com'
-  Password = ''
+  Username = 'testjbemailnotify@gmail.com'
+  Password = 'Password.1234'
   Port = 587
-  Sender = 'jdoe@gmail.com'
-  EnableSelfSignedCert = false
+  Sender = 'testjbemailnotify@gmail.com'
+  EnableSelfSignedCert = true
   Subject = 'EdgeX Notification'
 
 [SecretStore]
